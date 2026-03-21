@@ -79,7 +79,7 @@ export default function ServiceCard({ service }: Props) {
 
         {/* Exchange count — placeholder pour la demo */}
         <span className="ml-auto text-xs text-emerald-600 font-medium">
-          {Math.floor(Math.random() * 4)} échange{Math.random() > 0.5 ? 's' : ''}
+          x échange
         </span>
       </div>
     </Link>

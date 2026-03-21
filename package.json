@@ -1,27 +1,13 @@
 {
   "name": "kijaide",
-  "version": "0.1.0",
   "private": true,
+  "workspaces": ["apps/*"],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.2.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "tailwind-scrollbar-hide": "^4.0.0"
+    "dev": "concurrently \"npm run dev -w apps/api\" \"npm run dev -w apps/front\"",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:front": "npm run dev -w apps/front"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "concurrently": "^8.2.0"
   }
 }

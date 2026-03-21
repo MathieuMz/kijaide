@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useCallback } from 'react'
 import { CATEGORIES } from '@/constants/categories'
+import { fetchServices } from '@/lib/api'
 import type { Service } from '@/lib/types'
 import CategoryGrid from './CategoryGrid'
 import ServiceList from './ServiceList'
@@ -12,34 +13,44 @@ interface Props {
 }
 
 export default function ServiceExplorer({ initialServices, categories }: Props) {
-  const [services, setServices] = useState(initialServices)
+  const [services, setServices] = useState<Service[]>(initialServices)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null)
   const [mode, setMode] = useState<'offer' | 'request'>('offer')
-  const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(false)
 
-  async function handleCategoryChange(categoryLabel: string | null) {
-    setActiveCategory(categoryLabel)
-    setActiveSubcategory(null)
-    fetchServices(categoryLabel, null)
-  }
-
-  async function handleSubcategoryChange(sub: string | null) {
-    setActiveSubcategory(sub)
-    fetchServices(activeCategory, sub)
-  }
-
-  function fetchServices(category: string | null, subcategory: string | null) {
-    startTransition(async () => {
-      const params = new URLSearchParams()
-      if (category) params.set('category', category)
-      if (subcategory) params.set('subcategory', subcategory)
-      params.set('type', mode)
-
-      const res = await fetch(`/api/services?${params}`)
-      const data = await res.json()
+  const load = useCallback(async (
+    category: string | null,
+    subcategory: string | null,
+    type: 'offer' | 'request'
+  ) => {
+    setIsLoading(true)
+    try {
+      const data = await fetchServices({
+        category: category ?? undefined,
+        subcategory: subcategory ?? undefined,
+        type,
+      })
       setServices(data)
-    })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  function handleCategoryChange(label: string | null) {
+    setActiveCategory(label)
+    setActiveSubcategory(null)
+    load(label, null, mode)
+  }
+
+  function handleSubcategoryChange(sub: string | null) {
+    setActiveSubcategory(sub)
+    load(activeCategory, sub, mode)
+  }
+
+  function handleModeChange(m: 'offer' | 'request') {
+    setMode(m)
+    load(activeCategory, activeSubcategory, m)
   }
 
   const selectedCategory = categories.find(c => c.label === activeCategory)
@@ -51,19 +62,19 @@ export default function ServiceExplorer({ initialServices, categories }: Props) 
         {(['offer', 'request'] as const).map((m) => (
           <button
             key={m}
-            onClick={() => { setMode(m); fetchServices(activeCategory, activeSubcategory) }}
+            onClick={() => handleModeChange(m)}
             className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
               mode === m
                 ? 'bg-emerald-600 text-white'
                 : 'bg-white text-gray-500 hover:bg-gray-50'
             }`}
           >
-            {m === 'offer' ? 'Je cherche de l\'aide' : 'Je propose mon aide'}
+            {m === 'offer' ? "Je cherche de l'aide" : 'Je propose mon aide'}
           </button>
         ))}
       </div>
 
-      {/* Category grid */}
+      {/* Categories */}
       <CategoryGrid
         categories={categories}
         activeCategory={activeCategory}
@@ -89,7 +100,7 @@ export default function ServiceExplorer({ initialServices, categories }: Props) 
               onClick={() => handleSubcategoryChange(sub)}
               className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm border transition-colors ${
                 activeSubcategory === sub
-                  ? 'bg-emerÞald-600 border-emerald-600 text-white'
+                  ? 'bg-emerald-600 border-emerald-600 text-white'
                   : 'border-gray-200 text-gray-600 hover:border-gray-400'
               }`}
             >
@@ -100,7 +111,7 @@ export default function ServiceExplorer({ initialServices, categories }: Props) 
       )}
 
       {/* Results */}
-      <ServiceList services={services} isPending={isPending} />
+      <ServiceList services={services} isPending={isLoading} />
     </div>
   )
 }
