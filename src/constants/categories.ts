@@ -1,0 +1,51 @@
+export const CATEGORIES = [
+  {
+    id: 'jardinage-bricolage',
+    label: 'Jardinage & Bricolage',
+    emoji: '🌿',
+    bg: '#E1F5EE',
+    subcategories: ['Jardinage', 'Taille / haies', 'Bricolage', 'Couture'],
+  },
+  {
+    id: 'garde-animaux',
+    label: 'Garde & Animaux',
+    emoji: '🧒',
+    bg: '#FFF3E0',
+    subcategories: ['Garde enfants', 'Baby-sitting', 'Garde animaux'],
+  },
+  {
+    id: 'courses-mobilite',
+    label: 'Courses & Mobilité',
+    emoji: '🚗',
+    bg: '#E3F2FD',
+    subcategories: ['Courses', 'Transport médical', 'Covoiturage'],
+  },
+  {
+    id: 'cuisine-repas',
+    label: 'Cuisine & Repas',
+    emoji: '🍲',
+    bg: '#FCE4EC',
+    subcategories: ['Cuisine à domicile', 'Cours de cuisine'],
+  },
+  {
+    id: 'informatique-admin',
+    label: 'Informatique & Admin',
+    emoji: '💻',
+    bg: '#F3E5F5',
+    subcategories: ['Smartphone / tablette', 'Ordinateur', 'Démarches en ligne', 'Rédaction courriers'],
+  },
+  {
+    id: 'soutien-scolaire',
+    label: 'Soutien scolaire',
+    emoji: '📚',
+    bg: '#FBE9E7',
+    subcategories: ['Primaire', 'Collège', 'Lycée', 'Langues'],
+  },
+  {
+    id: 'compagnie',
+    label: 'Compagnie',
+    emoji: '🤝',
+    bg: '#ECEFF1',
+    subcategories: ['Visite à domicile', 'Jeux de société', 'Balade'],
+  },
+] as const
