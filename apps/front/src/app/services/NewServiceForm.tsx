@@ -18,14 +18,6 @@ interface Props {
   skills: Skill[]
 }
 
-const DURATIONS = [
-  { label: '30 min', value: 30 },
-  { label: '1h',     value: 60 },
-  { label: '1h30',   value: 90 },
-  { label: '2h',     value: 120 },
-  { label: '+ 2h',   value: 150 },
-]
-
 const SUGGESTIONS: Record<string, string> = {
   'Jardinage':           'Je peux venir tailler vos haies, tondre, planter. J\'ai mon propre matériel.',
   'Taille / haies':      'Je m\'occupe de la taille de vos haies et arbustes. Résultat soigné.',
@@ -45,33 +37,23 @@ export default function NewServiceForm({ resident, skills }: Props) {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [duration, setDuration] = useState<number | null>(null)
-  const [availability, setAvailability] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const suggestion = selectedSkill ? SUGGESTIONS[selectedSkill.subcategory] : null
 
   async function handleSubmit() {
-    if (!selectedSkill || !duration) return
+    if (!selectedSkill) return
     setIsSubmitting(true)
 
     try {
-      const res = await createService({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resident_id: resident.id,
-          title: title || selectedSkill.subcategory,
-          description,
-          category: selectedSkill.category,
-          subcategory: selectedSkill.subcategory,
-          duration_minutes: duration,
-          availability,
-          type: 'offer',
-        }),
-      })
-      console.log(res);
-      const data = await res.json()
+      const data = await createService({
+        resident_id: resident.id,
+        title: title || selectedSkill.subcategory,
+        description,
+        category: selectedSkill.category,
+        subcategory: selectedSkill.subcategory,
+        type: 'offer',
+      });
       setIsSubmitting(false)
 
       if (data.id) {
@@ -209,45 +191,6 @@ export default function NewServiceForm({ resident, skills }: Props) {
           />
         </div>
 
-        {/* Durée */}
-        <div className="mb-4">
-          <label className="text-xs font-medium text-gray-500 block mb-1.5">
-            Durée estimée
-          </label>
-          <div className="grid grid-cols-5 gap-2">
-            {DURATIONS.map(d => (
-              <button
-                key={d.value}
-                onClick={() => setDuration(d.value)}
-                className={`py-2.5 rounded-lg text-sm border transition-colors ${
-                  duration === d.value
-                    ? 'bg-emerald-50 border-emerald-500 text-emerald-700 font-medium'
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Disponibilités */}
-        <div className="mb-6">
-          <label className="text-xs font-medium text-gray-500 block mb-1">
-            Disponibilités
-          </label>
-          <p className="text-xs text-gray-400 mb-1.5">
-            En quelques mots, pas besoin d&apos;être précis
-          </p>
-          <input
-            type="text"
-            value={availability}
-            onChange={e => setAvailability(e.target.value)}
-            placeholder="Ex : week-end matin, ou sur rendez-vous"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-400"
-          />
-        </div>
-
         <div className="flex gap-3">
           <button
             onClick={() => setStep('skill')}
@@ -257,7 +200,6 @@ export default function NewServiceForm({ resident, skills }: Props) {
           </button>
           <button
             onClick={() => setStep('preview')}
-            disabled={!duration}
             className="flex-1 py-3 rounded-xl bg-emerald-600 text-white text-sm font-medium disabled:opacity-40 hover:bg-emerald-700 transition-colors"
           >
             Voir l&apos;aperçu
@@ -269,7 +211,6 @@ export default function NewServiceForm({ resident, skills }: Props) {
 
   // ── Step 3 : aperçu ───────────────────────────────────────
   const cat = CATEGORIES.find(c => c.label === selectedSkill?.category)
-  const durationLabel = DURATIONS.find(d => d.value === duration)?.label
 
   return (
     <div>
@@ -306,12 +247,6 @@ export default function NewServiceForm({ resident, skills }: Props) {
           <span className="text-xs bg-gray-100 text-gray-500 rounded-full px-2.5 py-1">
             {(resident as any).location?.name ?? 'Ta commune'}
           </span>
-          {durationLabel && (
-            <span className="text-xs text-gray-400">⏱ {durationLabel}</span>
-          )}
-          {availability && (
-            <span className="text-xs text-gray-400">📅 {availability}</span>
-          )}
         </div>
 
         <div className="flex items-center gap-2 border-t border-gray-100 mt-3 pt-3">

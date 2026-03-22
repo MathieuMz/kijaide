@@ -29,6 +29,11 @@ export default function HomePage() {
         >
         + Proposer
       </a>
+      <a href="/exchanges"
+        className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2"
+      >
+        Mes échanges
+      </a>
     </header><div className="max-w-2xl mx-auto px-4 py-6">
         {isLoading ? (
           <div className="space-y-3">

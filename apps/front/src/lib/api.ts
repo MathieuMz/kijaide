@@ -53,3 +53,22 @@ export async function createExchange(payload: object) {
   if (!res.ok) throw new Error('Failed to create exchange')
   return res.json()
 }
+
+export async function fetchExchanges(residentId: string) {
+  const res = await fetch(`${API_URL}/residents/${residentId}/exchanges`)
+  if (!res.ok) throw new Error('Failed to fetch exchanges')
+  return res.json()
+}
+
+export async function updateExchangeStatus(
+  id: string,
+  status: 'confirmed' | 'completed' | 'cancelled'
+) {
+  const res = await fetch(`${API_URL}/exchanges/${id}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
+  if (!res.ok) throw new Error('Failed to update exchange')
+  return res.json()
+}

@@ -22,25 +22,56 @@ export default async function exchangesRoutes(app: FastifyInstance) {
     return reply.status(201).send(data)
   })
 
-  // PATCH /api/exchanges/:id/status
-  app.patch('/exchanges/:id/status', async (req, reply) => {
+  // GET /api/residents/:id/exchanges
+  app.get('/residents/:id/exchanges', async (req, reply) => {
+    const { id } = req.params as { id: string }
+
+    const { data, error } = await supabase
+      .from('exchange')
+      .select(`
+        *,
+        service (
+          id,
+          title,
+          category,
+          subcategory
+        ),
+        requester:resident!exchange_requester_id_fkey (
+          id,
+          first_name,
+          location ( name )
+        ),
+        provider:resident!exchange_provider_id_fkey (
+          id,
+          first_name,
+          location ( name )
+        )
+      `)
+      .or(`requester_id.eq.${id},provider_id.eq.${id}`)
+      .order('created_at', { ascending: false })
+
+    if (error) return reply.status(500).send({ error: error.message })
+    return reply.send(data)
+  })
+
+  // POST /api/exchanges/:id/status
+  app.post('/exchanges/:id/status', async (req, reply) => {
     const { id } = req.params as { id: string }
     const { status } = req.body as {
       status: 'confirmed' | 'completed' | 'cancelled'
     }
 
-    // Si completed → transférer les crédits
     if (status === 'completed') {
       const { data: exchange } = await supabase
         .from('exchange')
-        .select('*, service (duration_minutes)')
+        .select('*')
         .eq('id', id)
         .single()
 
       if (exchange) {
-        const credits = exchange.service?.duration_minutes ?? 60
+        const credits = exchange.duration_minutes ?? 60
 
-        // Débiter le demandeur
+        // Débiter requester, créditer provider
         await supabase.rpc('transfer_credits', {
           from_id: exchange.requester_id,
           to_id: exchange.provider_id,
@@ -66,3 +97,4 @@ export default async function exchangesRoutes(app: FastifyInstance) {
     return reply.send({ ok: true })
   })
 }
+

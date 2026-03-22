@@ -25,6 +25,7 @@ export interface Resident {
   location_id: string
   bio: string | null
   credit_balance: number
+  availability: string | null
   created_at: string
   location?: Location
 }
@@ -36,8 +37,6 @@ export interface Service {
   description: string | null
   category: string
   subcategory: string | null
-  duration_minutes: number | null
-  availability: string | null
   type: ServiceType
   status: ServiceStatus
   lat: number | null
@@ -52,6 +51,7 @@ export interface Exchange {
   requester_id: string
   provider_id: string
   status: ExchangeStatus
+  duration_minutes: number | null
   credits_transferred: number | null
   message: string | null
   completed_at: string | null

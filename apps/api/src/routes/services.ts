@@ -19,7 +19,8 @@ export default async function servicesRoutes(app: FastifyInstance) {
           id,
           first_name,
           credit_balance,
-          location ( id, name, city )
+          location ( id, name, city ),
+          availability
         )
       `)
       .eq('status', 'active')
@@ -48,7 +49,8 @@ export default async function servicesRoutes(app: FastifyInstance) {
           first_name,
           credit_balance,
           bio,
-          location ( id, name, city )
+          location ( id, name, city ),
+          availability
         )
       `)
       .eq('id', id)
@@ -66,8 +68,6 @@ export default async function servicesRoutes(app: FastifyInstance) {
       description?: string
       category: string
       subcategory?: string
-      duration_minutes?: number
-      availability?: string
       type: 'offer' | 'request'
     }
 

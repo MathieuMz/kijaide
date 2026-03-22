@@ -29,6 +29,7 @@ function distanceLabel(service: Service): string {
 export default function ServiceCard({ service }: Props) {
   const cat = CATEGORIES.find((c) => c.label === service.category)
   const resident = service.resident
+  console.log(resident);
   const location = resident?.location
 
   return (
@@ -63,17 +64,10 @@ export default function ServiceCard({ service }: Props) {
           {location?.name ?? 'Commune inconnue'}
         </span>
 
-        {/* Duration */}
-        {service.duration_minutes && (
-          <span className="text-xs text-gray-400">
-            ⏱ {formatDuration(service.duration_minutes)}
-          </span>
-        )}
-
         {/* Availability */}
-        {service.availability && (
-          <span className="text-xs text-gray-400 truncate max-w-[140px]">
-            📅 {service.availability}
+        {resident?.availability && (
+          <span className="text-xs text-gray-400 truncate max-w-[200px]">
+            📅 {resident?.availability}
           </span>
         )}
 
