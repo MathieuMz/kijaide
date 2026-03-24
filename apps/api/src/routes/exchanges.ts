@@ -6,7 +6,7 @@ export default async function exchangesRoutes(app: FastifyInstance) {
   // POST /api/exchanges
   app.post('/exchanges', async (req, reply) => {
     const body = req.body as {
-      service_id: string
+      skill_id: string
       requester_id: string
       provider_id: string
       message?: string
@@ -30,21 +30,21 @@ export default async function exchangesRoutes(app: FastifyInstance) {
       .from('exchange')
       .select(`
         *,
-        service (
+        skill (
           id,
-          title,
           category,
-          subcategory
+          subcategory,
+          comment
         ),
         requester:resident!exchange_requester_id_fkey (
           id,
           first_name,
-          location ( name )
+          city
         ),
         provider:resident!exchange_provider_id_fkey (
           id,
           first_name,
-          location ( name )
+          city
         )
       `)
       .or(`requester_id.eq.${id},provider_id.eq.${id}`)
@@ -71,7 +71,6 @@ export default async function exchangesRoutes(app: FastifyInstance) {
       if (exchange) {
         const credits = exchange.duration_minutes ?? 60
 
-        // Débiter requester, créditer provider
         await supabase.rpc('transfer_credits', {
           from_id: exchange.requester_id,
           to_id: exchange.provider_id,
@@ -97,4 +96,3 @@ export default async function exchangesRoutes(app: FastifyInstance) {
     return reply.send({ ok: true })
   })
 }
-

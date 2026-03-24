@@ -12,11 +12,11 @@ export default function CategoryGrid({ categories, activeCategory, onSelect }: P
   return (
     <div className="grid grid-cols-4 gap-2 mb-5">
       {categories.map((cat) => {
-        const isActive = activeCategory === cat.label
+        const isActive = activeCategory === cat.id
         return (
           <button
             key={cat.id}
-            onClick={() => onSelect(isActive ? null : cat.label)}
+            onClick={() => onSelect(isActive ? null : cat.id)}
             className={`flex flex-col items-center justify-center rounded-xl p-3 border transition-all ${
               isActive
                 ? 'border-emerald-500 border-2'

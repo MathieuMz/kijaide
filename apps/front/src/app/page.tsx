@@ -1,20 +1,28 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { fetchServices } from '@/lib/api'
+import { useRouter } from 'next/navigation'
+import { fetchSkills } from '@/lib/api'
 import { CATEGORIES } from '@/constants/categories'
 import ServiceExplorer from '@/components/services/ServiceExplorer'
-import type { Service } from '@/lib/types'
+import { useCurrentUser } from '@/context/CurrentUser'
+import type { Skill, Resident } from '@/lib/types'
 
-export default function HomePage() {
-  const [services, setServices] = useState<Service[]>([])
+function HomeFeed({ user }: { user: Resident }) {
+  const router = useRouter()
+  const { setUser } = useCurrentUser()
+  const [skills, setSkills] = useState<Skill[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  const userId = user.id
   useEffect(() => {
-    fetchServices({ type: 'offer' })
-      .then(setServices)
+    fetchSkills()
+      .then((all) => setSkills(all.filter((s: Skill) => s.resident_id !== userId)))
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [userId])
+
+  const userLat = user.lat ?? null
+  const userLng = user.lng ?? null
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -23,18 +31,26 @@ export default function HomePage() {
           <h1 className="text-xl font-medium text-gray-900">Kijaide</h1>
           <p className="text-sm text-gray-500">Pays de Landivisiau</p>
         </div>
+        <div className="ml-auto flex items-center gap-2">
+          <a href="/skills" className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">
+            Mes compétences
+          </a>
+          <a href="/exchanges" className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">
+            Mes échanges
+          </a>
+          <button
+            onClick={() => { setUser(null); router.push('/login') }}
+            className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 hover:border-gray-300 transition-colors"
+          >
+            <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+              {user.first_name[0]}
+            </div>
+            <span className="text-xs text-gray-600">{user.first_name}</span>
+          </button>
+        </div>
+      </header>
 
-       <a href="/services/new"
-        className="ml-auto text-sm bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
-        >
-        + Proposer
-      </a>
-      <a href="/exchanges"
-        className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2"
-      >
-        Mes échanges
-      </a>
-    </header><div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-4 py-6">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -43,10 +59,25 @@ export default function HomePage() {
           </div>
         ) : (
           <ServiceExplorer
-            initialServices={services}
-            categories={CATEGORIES} />
+            initialSkills={skills}
+            categories={CATEGORIES}
+            userLat={userLat}
+            userLng={userLng}
+          />
         )}
       </div>
     </main>
   )
+}
+
+export default function HomePage() {
+  const router = useRouter()
+  const { user } = useCurrentUser()
+
+  useEffect(() => {
+    if (!user) router.replace('/login')
+  }, [user, router])
+
+  if (!user) return null
+  return <HomeFeed user={user} />
 }

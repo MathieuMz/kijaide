@@ -1,12 +1,14 @@
-import type { Service } from '@/lib/types'
+import type { Skill } from '@/lib/types'
 import ServiceCard from './ServiceCard'
 
 interface Props {
-  services: Service[]
+  services: Skill[]
   isPending: boolean
+  userLat?: number | null
+  userLng?: number | null
 }
 
-export default function ServiceList({ services, isPending }: Props) {
+export default function ServiceList({ services, isPending, userLat, userLng }: Props) {
   if (isPending) {
     return (
       <div className="space-y-3">
@@ -23,7 +25,7 @@ export default function ServiceList({ services, isPending }: Props) {
   if (!services.length) {
     return (
       <div className="text-center py-12 text-gray-400 text-sm">
-        Aucun service dans cette catégorie pour le moment.
+        Aucune proposition de service dans cette catégorie pour le moment.
       </div>
     )
   }
@@ -31,10 +33,10 @@ export default function ServiceList({ services, isPending }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-400 mb-3">
-        {services.length} service{services.length > 1 ? 's' : ''}
+        {services.length} proposition{services.length > 1 ? 's' : ''} de service
       </p>
       {services.map((service) => (
-        <ServiceCard key={service.id} service={service} />
+        <ServiceCard key={service.id} service={service} userLat={userLat} userLng={userLng} />
       ))}
     </div>
   )

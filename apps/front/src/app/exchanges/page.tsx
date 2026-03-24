@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fetchExchanges, updateExchangeStatus } from '@/lib/api'
 import { CATEGORIES } from '@/constants/categories'
-import { DEMO_RESIDENT_ID } from '@/constants/demo'
+import { useCurrentUser } from '@/context/CurrentUser'
 
 type ExchangeStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled'
 
@@ -15,15 +15,15 @@ interface Exchange {
   credits_transferred: number | null
   completed_at: string | null
   created_at: string
-  service: {
+  skill: {
     id: string
-    title: string
     category: string
     subcategory: string | null
-}
+    comment: string | null
+  }
   duration_minutes: number | null
-  requester: { id: string; first_name: string; location: { name: string } }
-  provider: { id: string; first_name: string; location: { name: string } }
+  requester: { id: string; first_name: string; city: string | null }
+  provider: { id: string; first_name: string; city: string | null }
 }
 
 const STATUS_LABEL: Record<ExchangeStatus, string> = {
@@ -51,16 +51,18 @@ type Tab = 'received' | 'sent'
 
 export default function ExchangesPage() {
   const router = useRouter()
+  const { user } = useCurrentUser()
   const [exchanges, setExchanges] = useState<Exchange[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('received')
   const [updating, setUpdating] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchExchanges(DEMO_RESIDENT_ID)
+    if (!user) return
+    fetchExchanges(user.id)
       .then(setExchanges)
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [user])
 
   async function handleStatus(exchangeId: string, status: 'confirmed' | 'completed' | 'cancelled') {
     setUpdating(exchangeId)
@@ -74,8 +76,8 @@ export default function ExchangesPage() {
     }
   }
 
-  const received = exchanges.filter(e => e.provider.id === DEMO_RESIDENT_ID)
-  const sent     = exchanges.filter(e => e.requester.id === DEMO_RESIDENT_ID)
+  const received = exchanges.filter(e => e.provider.id === user?.id)
+  const sent     = exchanges.filter(e => e.requester.id === user?.id)
   const displayed = activeTab === 'received' ? received : sent
 
   return (
@@ -128,8 +130,9 @@ export default function ExchangesPage() {
         ) : (
           <div className="space-y-3">
             {displayed.map(exchange => {
-              const cat = CATEGORIES.find(c => c.label === exchange.service?.category)
-              const isReceived = exchange.provider.id === DEMO_RESIDENT_ID
+              const cat = CATEGORIES.find(c => c.id === exchange.skill?.category)
+              const subcatLabel = cat?.subcategories.find(s => s.id === exchange.skill?.subcategory)?.label ?? exchange.skill?.subcategory
+              const isReceived = exchange.provider.id === user?.id
               const other = isReceived ? exchange.requester : exchange.provider
               const isUpdating = updating === exchange.id
 
@@ -148,14 +151,14 @@ export default function ExchangesPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
-                        {exchange.service?.title}
+                        {subcatLabel}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {isReceived ? 'De' : 'À'}{' '}
                         <span className="font-medium text-gray-700">
                           {other.first_name}
                         </span>
-                        {' · '}{other.location?.name}
+                        {' · '}{other.city}
                         {exchange.duration_minutes && (
                           <span className="ml-1 text-gray-400">
                             · ⏱ {formatDuration(exchange.duration_minutes)}

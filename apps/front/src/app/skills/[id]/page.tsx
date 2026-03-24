@@ -2,38 +2,39 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { fetchServiceById, createExchange } from '@/lib/api'
+import { fetchSkillById, createExchange } from '@/lib/api'
 import { CATEGORIES } from '@/constants/categories'
-import { DEMO_RESIDENT_ID } from '@/constants/demo'
-import type { Service } from '@/lib/types'
+import { useCurrentUser } from '@/context/CurrentUser'
+import type { Skill } from '@/lib/types'
 
 type ContactStep = 'idle' | 'message' | 'sent'
 
-export default function ServicePage() {
+export default function SkillPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { user } = useCurrentUser()
 
-  const [service, setService] = useState<Service | null>(null)
+  const [skill, setSkill] = useState<Skill | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [contactStep, setContactStep] = useState<ContactStep>('idle')
   const [message, setMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
-    fetchServiceById(id)
-      .then(setService)
+    fetchSkillById(id)
+      .then(setSkill)
       .catch(() => router.push('/'))
       .finally(() => setIsLoading(false))
   }, [id, router])
 
   async function handleSend() {
-    if (!service || !message.trim()) return
+    if (!skill || !message.trim()) return
     setIsSending(true)
     try {
       await createExchange({
-        service_id: service.id,
-        requester_id: DEMO_RESIDENT_ID,
-        provider_id: service.resident_id,
+        skill_id: skill.id,
+        requester_id: user!.id,
+        provider_id: skill.resident_id,
         message: message.trim(),
       })
       setContactStep('sent')
@@ -50,79 +51,60 @@ export default function ServicePage() {
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
           <div className="h-8 w-32 rounded-lg bg-gray-100 animate-pulse" />
           <div className="h-48 rounded-xl bg-gray-100 animate-pulse" />
-          <div className="h-24 rounded-xl bg-gray-100 animate-pulse" />
         </div>
       </main>
     )
   }
 
-  if (!service) return null
+  if (!skill) return null
 
-  const cat = CATEGORIES.find(c => c.label === service.category)
-  const resident = service.resident as any
-  const location = resident?.location
+  const cat = CATEGORIES.find(c => c.id === skill.category)
+  const subcatLabel = cat?.subcategories.find(s => s.id === skill.subcategory)?.label ?? skill.subcategory
+  const resident = skill.resident
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="text-gray-400 hover:text-gray-600 text-sm"
-        >
+        <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600 text-sm">
           ← Retour
         </button>
-        <h1 className="text-base font-medium text-gray-900 truncate">
-          {service.title}
-        </h1>
+        <h1 className="text-base font-medium text-gray-900 truncate">{subcatLabel}</h1>
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
         {/* Carte principale */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          {/* Catégorie */}
           <div
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium mb-4"
             style={{ backgroundColor: cat?.bg ?? '#f5f5f5' }}
           >
             <span>{cat?.emoji}</span>
-            <span>{service.category}</span>
-            {service.subcategory && (
-              <span className="text-gray-400">· {service.subcategory}</span>
-            )}
+            <span>{cat?.label}</span>
+            {subcatLabel && <span className="text-gray-500">· {subcatLabel}</span>}
           </div>
 
-          {/* Titre */}
-          <h2 className="text-lg font-medium text-gray-900 mb-2">
-            {service.title}
-          </h2>
-
-          {/* Description */}
-          {service.description && (
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              {service.description}
-            </p>
+          {skill.comment ? (
+            <p className="text-sm text-gray-700 leading-relaxed">{skill.comment}</p>
+          ) : (
+            <p className="text-sm text-gray-400 italic">Aucun détail renseigné.</p>
           )}
 
-          {/* Meta */}
-          <div className="flex flex-wrap gap-3 text-sm text-gray-500 border-t border-gray-100 pt-4">
-            {location?.name && (
+          <div className="flex flex-wrap gap-3 text-sm text-gray-500 border-t border-gray-100 pt-4 mt-4">
+            {resident?.city && (
               <span className="flex items-center gap-1.5">
-                <span>📍</span>
-                {location.name}
+                <span>📍</span>{resident.city}
               </span>
             )}
-            {resident.availability && (
+            {resident?.availability && (
               <span className="flex items-center gap-1.5">
-                <span>📅</span>
-                {resident.availability}
+                <span>📅</span>{resident.availability}
               </span>
             )}
           </div>
         </div>
 
-        {/* Profil du résident — révélation progressive niveau 1 */}
+        {/* Profil */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
             Proposé par
@@ -132,14 +114,12 @@ export default function ServicePage() {
               {resident?.first_name?.[0] ?? '?'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">
-                {resident?.first_name}
-              </p>
+              <p className="text-sm font-medium text-gray-900">{resident?.first_name}</p>
               <p className="text-xs text-gray-500">
-                {location?.name}
+                {resident?.city}
                 {resident?.credit_balance != null && (
                   <span className="ml-2 text-emerald-600">
-                    · {resident.credit_balance} crédits
+                    · {resident.credit_balance} services rendus
                   </span>
                 )}
               </p>
@@ -149,14 +129,12 @@ export default function ServicePage() {
             </div>
           </div>
           {resident?.bio && (
-            <p className="text-sm text-gray-500 mt-3 leading-relaxed">
-              {resident.bio}
-            </p>
+            <p className="text-sm text-gray-500 mt-3 leading-relaxed">{resident.bio}</p>
           )}
         </div>
 
-        {/* Zone de contact */}
-        {service.resident_id !== DEMO_RESIDENT_ID && (
+        {/* Contact */}
+        {skill.resident_id !== user?.id ? (
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             {contactStep === 'idle' && (
               <button
@@ -175,7 +153,7 @@ export default function ServicePage() {
                 <textarea
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  placeholder={`Bonjour ${resident?.first_name}, je suis intéressé(e) par votre service...`}
+                  placeholder={`Bonjour ${resident?.first_name}, je suis intéressé(e)...`}
                   rows={4}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-400 resize-none mb-3"
                 />
@@ -200,9 +178,7 @@ export default function ServicePage() {
             {contactStep === 'sent' && (
               <div className="text-center py-2">
                 <div className="text-2xl mb-2">🎉</div>
-                <p className="text-sm font-medium text-gray-900 mb-1">
-                  Message envoyé !
-                </p>
+                <p className="text-sm font-medium text-gray-900 mb-1">Message envoyé !</p>
                 <p className="text-xs text-gray-500">
                   {resident?.first_name} recevra ta demande et pourra te répondre.
                 </p>
@@ -215,15 +191,11 @@ export default function ServicePage() {
               </div>
             )}
           </div>
-        )}
-
-        {/* Si c'est son propre service */}
-        {service.resident_id === DEMO_RESIDENT_ID && (
+        ) : (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 text-center">
-            C&apos;est ton service — tu ne peux pas te contacter toi-même.
+            C&apos;est ta compétence.
           </div>
         )}
-
       </div>
     </main>
   )
