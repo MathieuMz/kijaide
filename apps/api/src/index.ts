@@ -11,6 +11,7 @@ const app = Fastify({ logger: true })
 async function main() {
   await app.register(cors, {
     origin: ["http://localhost:3000", "https://kijaide.onrender.com"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
   })
 
   await app.register(residentsRoutes, { prefix: '/api' })

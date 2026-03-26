@@ -61,6 +61,8 @@ exchange      -- mise en relation entre deux résidents
 - `duration_minutes` est sur `exchange` — négocié entre les deux personnes
 - `credits_transferred` = `duration_minutes ?? 60` (basé sur la durée, pas toujours 1)
 - Pas d'auth pour le MVP — la page `/login` liste tous les résidents en BDD, cliquer sur l'un d'eux le définit comme utilisateur courant (stocké en localStorage via `CurrentUser` context)
+- CORS API autorise GET, POST, PATCH, DELETE
+- La liste des skills est triée par distance croissante si l'utilisateur a des coordonnées (`haversineKm` de `geo.ts`)
 
 ---
 
@@ -93,7 +95,7 @@ GET  /api/residents/:id             → profil complet
 GET  /api/residents/:id/skills      → compétences du résident
 GET  /api/residents/:id/exchanges   → échanges reçus et envoyés (avec skill, requester, provider)
 POST /api/residents                 → créer un résident (onboarding)
-PATCH /api/residents/:id            → mettre à jour (first_name, lat, lng, address, availability)
+PATCH /api/residents/:id            → mettre à jour (first_name, lat, lng, address, city, availability)
 POST /api/residents/:id/skills      → bulk replace des compétences
 
 POST /api/exchanges                 → créer un échange { skill_id, requester_id, provider_id, message }
@@ -108,6 +110,7 @@ POST /api/exchanges/:id/status      → confirmed | completed | cancelled
 /                     → home feed (redirect /login si non connecté)
 /login                → faux login démo : liste tous les résidents de la BDD, clic = connexion instantanée + bouton "Nouvel utilisateur" → /onboarding
 /onboarding           → création de compte (flow swipe complet)
+/profile              → édition du profil (prénom, adresse, disponibilités)
 /skills               → édition de ses propres compétences
 /skills/[id]          → fiche compétence d'un autre résident + mise en relation
 /exchanges            → mes échanges en cours (reçus / envoyés)
@@ -134,7 +137,7 @@ Flow conversationnel en 4 phases :
 src/components/services/
   ServiceExplorer.tsx     → mode toggle + CategoryGrid + subcategories + ServiceList
   CategoryGrid.tsx        → grille des catégories
-  ServiceList.tsx         → liste de skills avec skeleton loading
+  ServiceList.tsx         → liste de skills triée par distance croissante (résidents sans coords en dernier)
   ServiceCard.tsx         → carte cliquable d'une skill
 ```
 

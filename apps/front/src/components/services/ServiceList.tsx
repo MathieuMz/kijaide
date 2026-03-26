@@ -1,5 +1,6 @@
 import type { Skill } from '@/lib/types'
 import ServiceCard from './ServiceCard'
+import { haversineKm } from '@/lib/geo'
 
 interface Props {
   services: Skill[]
@@ -30,12 +31,24 @@ export default function ServiceList({ services, isPending, userLat, userLng }: P
     )
   }
 
+  const sorted = userLat != null && userLng != null
+    ? [...services].sort((a, b) => {
+        const distA = a.resident?.lat != null && a.resident?.lng != null
+          ? haversineKm(userLat, userLng, a.resident.lat, a.resident.lng)
+          : Infinity
+        const distB = b.resident?.lat != null && b.resident?.lng != null
+          ? haversineKm(userLat, userLng, b.resident.lat, b.resident.lng)
+          : Infinity
+        return distA - distB
+      })
+    : services
+
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-400 mb-3">
-        {services.length} proposition{services.length > 1 ? 's' : ''} de service
+        {sorted.length} proposition{sorted.length > 1 ? 's' : ''} de service
       </p>
-      {services.map((service) => (
+      {sorted.map((service) => (
         <ServiceCard key={service.id} service={service} userLat={userLat} userLng={userLng} />
       ))}
     </div>
