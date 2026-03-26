@@ -17,7 +17,7 @@ async function main() {
   await app.register(exchangesRoutes, { prefix: '/api' })
   await app.register(skillsRoutes, { prefix: '/api' })
 
-  await app.listen({ port: Number(process.env.PORT ?? 3001) })
+  await app.listen({ port: Number(process.env.PORT ?? 3001), host: '0.0.0.0' })
 }
 
 main();
