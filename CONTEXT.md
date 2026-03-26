@@ -14,7 +14,7 @@ Le projet est personnel, développé en side project, pas d'objectif de profit i
 ```
 kijaide/
   apps/
-    web/    → Next.js 14 (App Router, TypeScript, Tailwind) — pur front, Client Components
+    front/  → Next.js 14 (App Router, TypeScript, Tailwind) — pur front, Client Components
     api/    → Fastify (TypeScript) + Supabase
 ```
 
@@ -27,56 +27,48 @@ kijaide/
 ### Front
 - Next.js 14, App Router, TypeScript, Tailwind CSS
 - Tous les composants sont des Client Components (`'use client'`)
-- Appels API via `apps/web/src/lib/api.ts`
-- Variables d'env dans `apps/web/.env.local`
+- Appels API via `apps/front/src/lib/api.ts`
+- Variables d'env dans `apps/front/.env.local`
 
 ---
 
 ## Modèle de données (Supabase)
 
-5 tables MVP :
+4 tables MVP (la table `service` a été supprimée) :
 
 ```sql
 organization  -- le client SaaS (comcom, asso, ville...)
   id, name, slug, primary_color
 
-location      -- commune ou quartier, appartient à une organization
-  id, name, city, zip_code, address, country, organization_id, lat, lng
-
 resident      -- l'habitant / utilisateur final
-  id, first_name, location_id, bio, credit_balance, availability, created_at
+  id, first_name, organization_id, bio, credit_balance,
+  availability, address, city, lat, lng, created_at
 
 skill         -- compétences déclarées par le résident à l'onboarding
   id, resident_id, category, subcategory, comment
 
-service       -- offre ou demande de service
-  id, resident_id, title, description, category, subcategory,
-  type (offer|request), status (active|paused|archived),
-  lat, lng, created_at
-
 exchange      -- mise en relation entre deux résidents
-  id, service_id, requester_id, provider_id,
+  id, skill_id, requester_id, provider_id,
   status (pending|confirmed|completed|cancelled),
   duration_minutes, credits_transferred, message,
   completed_at, created_at
 ```
 
 ### Points importants
-- `availability` est sur `resident`, pas sur `service`
-- `duration_minutes` est sur `exchange`, pas sur `service` — c'est négocié entre les deux personnes
-- `credits_transferred` vaut toujours `1` (modèle 1 service = 1 service rendu)
-- Pas d'auth pour le MVP — `DEMO_RESIDENT_ID` hardcodé dans `apps/web/src/constants/demo.ts`
+- La table `service` n'existe plus — les échanges référencent `skill_id` directement
+- La table `location` n'existe plus — `resident` a directement `city`, `address`, `lat`, `lng`, `organization_id`
+- `availability` est sur `resident`
+- `duration_minutes` est sur `exchange` — négocié entre les deux personnes
+- `credits_transferred` = `duration_minutes ?? 60` (basé sur la durée, pas toujours 1)
+- Pas d'auth pour le MVP — la page `/login` liste tous les résidents en BDD, cliquer sur l'un d'eux le définit comme utilisateur courant (stocké en localStorage via `CurrentUser` context)
 
 ---
 
 ## Modèle d'échange
 
-**1 service rendu = 1 service reçu**, quelle que soit la durée ou la nature.
-
 - Unité appelée "services rendus" dans l'UI (pas "crédits", pas "points")
 - `credit_balance` sur `resident` = nombre de services rendus
-- La colonne existe en base pour pouvoir changer de modèle plus tard
-- Fonction RPC Supabase `transfer_credits(from_id, to_id, amount)` — toujours appelée avec `amount = 1`
+- Fonction RPC Supabase `transfer_credits(from_id, to_id, amount)` — appelée avec `amount = duration_minutes ?? 60`
 
 ---
 
@@ -85,26 +77,27 @@ exchange      -- mise en relation entre deux résidents
 Pour le MVP, une seule organization hardcodée :
 - Slug : `cc-landivisiau`
 - Nom : Communauté de Communes du Pays de Landivisiau
-- 4 locations : Landivisiau, Lampaul-Guimiliau, Plougar, Saint-Thégonnec
-- 8 résidents fictifs avec services et échanges (voir `seed.sql`)
-- Résident démo : `DEMO_RESIDENT_ID = 'c1000000-0000-0000-0000-000000000001'` (Jean-Pierre)
+- 8 résidents fictifs avec compétences et échanges (voir `seed.sql`)
+- Variable d'env `NEXT_PUBLIC_ORGANIZATION_ID` utilisée à l'onboarding pour rattacher le nouveau résident
 
 ---
 
 ## Routes API Fastify
 
 ```
-GET  /api/services                    → liste (filtres: category, subcategory, type)
-GET  /api/services/:id                → détail avec resident + location
-POST /api/services                    → créer un service
-PATCH /api/services/:id/status        → changer le statut
+GET  /api/skills                    → liste (filtres: category, subcategory) avec resident embedé
+GET  /api/skills/:id                → détail avec resident (id, first_name, credit_balance, bio, availability, city, lat, lng)
 
-GET  /api/residents/:id               → profil avec location
-GET  /api/residents/:id/skills        → compétences du résident
-GET  /api/residents/:id/exchanges     → échanges reçus et envoyés
+GET  /api/residents                 → liste avec skills count
+GET  /api/residents/:id             → profil complet
+GET  /api/residents/:id/skills      → compétences du résident
+GET  /api/residents/:id/exchanges   → échanges reçus et envoyés (avec skill, requester, provider)
+POST /api/residents                 → créer un résident (onboarding)
+PATCH /api/residents/:id            → mettre à jour (first_name, lat, lng, address, availability)
+POST /api/residents/:id/skills      → bulk replace des compétences
 
-POST /api/exchanges                   → créer un échange (mise en relation)
-PATCH /api/exchanges/:id/status       → confirmed | completed | cancelled
+POST /api/exchanges                 → créer un échange { skill_id, requester_id, provider_id, message }
+POST /api/exchanges/:id/status      → confirmed | completed | cancelled
 ```
 
 ---
@@ -112,11 +105,26 @@ PATCH /api/exchanges/:id/status       → confirmed | completed | cancelled
 ## Pages Next.js
 
 ```
-/                         → exploration des services (ServiceExplorer)
-/services/new             → création d'un service (NewServiceForm)
-/services/[id]            → fiche service + mise en relation
-/exchanges                → mes échanges en cours (reçus / envoyés)
+/                     → home feed (redirect /login si non connecté)
+/login                → faux login démo : liste tous les résidents de la BDD, clic = connexion instantanée + bouton "Nouvel utilisateur" → /onboarding
+/onboarding           → création de compte (flow swipe complet)
+/skills               → édition de ses propres compétences
+/skills/[id]          → fiche compétence d'un autre résident + mise en relation
+/exchanges            → mes échanges en cours (reçus / envoyés)
 ```
+
+---
+
+## Onboarding (implémenté)
+
+Flow conversationnel en 4 phases :
+1. **identity** — prénom + adresse (autocomplete via api-adresse.data.gouv.fr)
+2. **swipe** — carte par catégorie, swipe droite (oui) / gauche (non)
+3. **subcats** — sélection des sous-compétences (chips) pour chaque catégorie acceptée
+4. **details** — commentaires facultatifs par sous-compétence + disponibilités (chips + champ libre)
+5. **recap** — résumé du profil avant enregistrement
+
+À la validation : `POST /api/residents` puis `POST /api/residents/:id/skills`, puis redirect `/`.
 
 ---
 
@@ -125,52 +133,24 @@ PATCH /api/exchanges/:id/status       → confirmed | completed | cancelled
 ```
 src/components/services/
   ServiceExplorer.tsx     → mode toggle + CategoryGrid + subcategories + ServiceList
-  CategoryGrid.tsx        → grille 4 colonnes des catégories
-  ServiceList.tsx         → liste avec skeleton loading
-  ServiceCard.tsx         → carte cliquable avec meta (location, durée, services rendus)
-  NewServiceForm.tsx      → 3 steps : skill → details → preview
+  CategoryGrid.tsx        → grille des catégories
+  ServiceList.tsx         → liste de skills avec skeleton loading
+  ServiceCard.tsx         → carte cliquable d'une skill
 ```
 
 ---
 
-## Taxonomie des compétences (onboarding)
+## Taxonomie des compétences
 
-9 familles, utilisées dans l'onboarding swipe :
+7 catégories (voir `apps/front/src/constants/categories.ts`) :
 
-1. Jardinage & nature
-2. Bricolage & réparations
-3. Cuisine & préparation (inclut lacto-fermentation)
-4. Savoirs traditionnels & artisanat
-5. Compétences artistiques (musique, arts visuels, dessin, peinture)
-6. Compétences sportives & bien-être
-7. Compétences numériques
-8. Compétences intellectuelles & admin
-9. Mobilité & logistique
-
-Fichier : `apps/web/src/constants/categories.ts`
-
----
-
-## Onboarding utilisateur (à implémenter)
-
-Flow conversationnel style Tinder :
-1. Carte par famille → swipe droite (oui) / swipe gauche (non)
-2. Si oui → sélection des sous-compétences (chips)
-3. Fin → récap du profil + call to action
-
-Prototype réalisé, pas encore intégré dans le front.
-
-Questions de vie → familles détectées :
-- "Tu as un jardin ?" → Jardinage & nature
-- "Tu bricoles ?" → Bricolage & réparations
-- "Tu cuisines avec plaisir ?" → Cuisine & préparation
-- "Tu joues d'un instrument ?" → Musique
-- "Tu crées des choses artistiques ?" → Arts & artisanat
-- "Tu as une voiture ?" → Mobilité & logistique
-- "Tu es à l'aise avec le numérique ?" → Compétences numériques
-- "Tu peux aider quelqu'un à apprendre ?" → Enseignement & admin
-- "Tu es à l'aise avec les enfants ?" → Garde & accompagnement
-- "Tu pratiques un sport ?" → Sport & bien-être
+1. Jardinage & bricolage
+2. Garde & animaux
+3. Courses & mobilité
+4. Cuisine & repas
+5. Informatique & admin
+6. Soutien scolaire
+7. Compagnie
 
 ---
 
@@ -187,11 +167,10 @@ Pas d'étoiles ni de notes — uniquement le compteur "services rendus".
 
 ## Ce qui reste à faire (par priorité)
 
-1. **Intégrer l'onboarding swipe** dans le front (`/onboarding`)
-2. **Dashboard comcom** — métriques clés pour l'agent territorial
-3. **Auth** — Supabase Auth, à ajouter en dernier
-4. **Multi-tenant** — routing par `[slug]` d'organization (actuellement hardcodé sur `cc-landivisiau`)
-5. **Marque blanche** — logo + couleur primaire par organization
+1. **Dashboard comcom** — métriques clés pour l'agent territorial
+2. **Auth** — Supabase Auth, à ajouter en dernier
+3. **Multi-tenant** — routing par `[slug]` d'organization (actuellement hardcodé sur `cc-landivisiau`)
+4. **Marque blanche** — logo + couleur primaire par organization
 
 ---
 
