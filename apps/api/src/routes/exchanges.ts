@@ -69,19 +69,17 @@ export default async function exchangesRoutes(app: FastifyInstance) {
         .single()
 
       if (exchange) {
-        const credits = exchange.duration_minutes ?? 60
-
         await supabase.rpc('transfer_credits', {
           from_id: exchange.requester_id,
           to_id: exchange.provider_id,
-          amount: credits,
+          amount: 1,
         })
 
         await supabase
           .from('exchange')
           .update({
             status: 'completed',
-            credits_transferred: credits,
+            credits_transferred: 1,
             completed_at: new Date().toISOString(),
           })
           .eq('id', id)

@@ -5,6 +5,7 @@ import 'dotenv/config'
 import residentsRoutes from './routes/residents'
 import exchangesRoutes from './routes/exchanges'
 import skillsRoutes from './routes/skills'
+import organizationsRoutes from './routes/organizations'
 
 const app = Fastify({ logger: true })
 
@@ -17,6 +18,7 @@ async function main() {
   await app.register(residentsRoutes, { prefix: '/api' })
   await app.register(exchangesRoutes, { prefix: '/api' })
   await app.register(skillsRoutes, { prefix: '/api' })
+  await app.register(organizationsRoutes, { prefix: '/api' })
 
   await app.listen({ port: Number(process.env.PORT ?? 3001), host: '0.0.0.0' })
 }

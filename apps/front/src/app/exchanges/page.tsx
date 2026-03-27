@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { fetchExchanges, updateExchangeStatus } from '@/lib/api'
 import { CATEGORIES } from '@/constants/categories'
 import { useCurrentUser } from '@/context/CurrentUser'
-
-type ExchangeStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled'
+import { ExchangeStatus } from '@/lib/types'
 
 interface Exchange {
   id: string
@@ -27,17 +26,17 @@ interface Exchange {
 }
 
 const STATUS_LABEL: Record<ExchangeStatus, string> = {
-  pending:   'En attente',
-  confirmed: 'Confirmé',
-  completed: 'Réalisé',
-  cancelled: 'Annulé',
+  [ExchangeStatus.Pending]:   'En attente',
+  [ExchangeStatus.Confirmed]: 'Confirmé',
+  [ExchangeStatus.Completed]: 'Réalisé',
+  [ExchangeStatus.Cancelled]: 'Annulé',
 }
 
 const STATUS_COLOR: Record<ExchangeStatus, string> = {
-  pending:   'bg-amber-50 text-amber-700',
-  confirmed: 'bg-blue-50 text-blue-700',
-  completed: 'bg-emerald-50 text-emerald-700',
-  cancelled: 'bg-gray-100 text-gray-500',
+  [ExchangeStatus.Pending]:   'bg-amber-50 text-amber-700',
+  [ExchangeStatus.Confirmed]: 'bg-blue-50 text-blue-700',
+  [ExchangeStatus.Completed]: 'bg-emerald-50 text-emerald-700',
+  [ExchangeStatus.Cancelled]: 'bg-gray-100 text-gray-500',
 }
 
 function formatDuration(minutes: number | null): string {
@@ -47,14 +46,22 @@ function formatDuration(minutes: number | null): string {
   return m > 0 ? `${h}h${m.toString().padStart(2, '0')}` : `${h}h`
 }
 
-type Tab = 'received' | 'sent'
+enum Tab {
+  Received = 'received',
+  Sent     = 'sent',
+}
+
+const TAB_LABEL: Record<Tab, string> = {
+  [Tab.Received]: 'Reçus',
+  [Tab.Sent]:     'Envoyés',
+}
 
 export default function ExchangesPage() {
   const router = useRouter()
   const { user } = useCurrentUser()
   const [exchanges, setExchanges] = useState<Exchange[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<Tab>('received')
+  const [activeTab, setActiveTab] = useState<Tab>(Tab.Received)
   const [updating, setUpdating] = useState<string | null>(null)
 
   useEffect(() => {
@@ -64,7 +71,7 @@ export default function ExchangesPage() {
       .finally(() => setIsLoading(false))
   }, [user])
 
-  async function handleStatus(exchangeId: string, status: 'confirmed' | 'completed' | 'cancelled') {
+  async function handleStatus(exchangeId: string, status: ExchangeStatus) {
     setUpdating(exchangeId)
     try {
       await updateExchangeStatus(exchangeId, status)
@@ -78,7 +85,7 @@ export default function ExchangesPage() {
 
   const received = exchanges.filter(e => e.provider.id === user?.id)
   const sent     = exchanges.filter(e => e.requester.id === user?.id)
-  const displayed = activeTab === 'received' ? received : sent
+  const displayed = activeTab === Tab.Received ? received : sent
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -96,7 +103,7 @@ export default function ExchangesPage() {
 
         {/* Tabs */}
         <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
-          {(['received', 'sent'] as Tab[]).map(tab => (
+          {([Tab.Received, Tab.Sent]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -106,8 +113,8 @@ export default function ExchangesPage() {
                   : 'bg-white text-gray-500 hover:bg-gray-50'
               }`}
             >
-              {tab === 'received' ? 'Reçus' : 'Envoyés'}
-              {tab === 'received' && received.filter(e => e.status === 'pending').length > 0 && (
+              {TAB_LABEL[tab]}
+              {tab === Tab.Received && received.filter(e => e.status === ExchangeStatus.Pending).length > 0 && (
                 <span className="absolute top-1.5 right-3 w-2 h-2 rounded-full bg-amber-400" />
               )}
             </button>
@@ -123,7 +130,7 @@ export default function ExchangesPage() {
           </div>
         ) : displayed.length === 0 ? (
           <div className="text-center py-12 text-gray-400 text-sm">
-            {activeTab === 'received'
+            {activeTab === Tab.Received
               ? 'Personne ne t\'a encore contacté.'
               : 'Tu n\'as pas encore envoyé de demande.'}
           </div>
@@ -179,24 +186,24 @@ export default function ExchangesPage() {
                   )}
 
                   {/* Crédits si réalisé */}
-                  {exchange.status === 'completed' && exchange.credits_transferred && (
+                  {exchange.status === ExchangeStatus.Completed && exchange.credits_transferred && (
                     <p className="text-xs text-emerald-600 font-medium mb-3">
                       ✓ {exchange.credits_transferred} crédits transférés
                     </p>
                   )}
 
                   {/* Actions */}
-                  {exchange.status === 'pending' && isReceived && (
+                  {exchange.status === ExchangeStatus.Pending && isReceived && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleStatus(exchange.id, 'cancelled')}
+                        onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
                         disabled={isUpdating}
                         className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
                       >
                         Décliner
                       </button>
                       <button
-                        onClick={() => handleStatus(exchange.id, 'confirmed')}
+                        onClick={() => handleStatus(exchange.id, ExchangeStatus.Confirmed)}
                         disabled={isUpdating}
                         className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
                       >
@@ -205,17 +212,17 @@ export default function ExchangesPage() {
                     </div>
                   )}
 
-                  {exchange.status === 'confirmed' && (
+                  {exchange.status === ExchangeStatus.Confirmed && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleStatus(exchange.id, 'cancelled')}
+                        onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
                         disabled={isUpdating}
                         className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
                       >
                         Annuler
                       </button>
                       <button
-                        onClick={() => handleStatus(exchange.id, 'completed')}
+                        onClick={() => handleStatus(exchange.id, ExchangeStatus.Completed)}
                         disabled={isUpdating}
                         className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
                       >
@@ -224,9 +231,9 @@ export default function ExchangesPage() {
                     </div>
                   )}
 
-                  {exchange.status === 'pending' && !isReceived && (
+                  {exchange.status === ExchangeStatus.Pending && !isReceived && (
                     <button
-                      onClick={() => handleStatus(exchange.id, 'cancelled')}
+                      onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
                       disabled={isUpdating}
                       className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
                     >

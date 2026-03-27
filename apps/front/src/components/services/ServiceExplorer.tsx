@@ -85,6 +85,17 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
         </div>
       )}
 
+      <div className="mb-3">
+        <h2 className="text-base font-semibold text-gray-800">
+          {activeCategory
+            ? `Services proposés · ${selectedCategory?.label}`
+            : 'Services proposés'}
+        </h2>
+        {!activeCategory && (
+          <p className="text-xs text-gray-400 mt-0.5">Filtre par catégorie pour affiner</p>
+        )}
+      </div>
+
       <ServiceList services={skills} isPending={isLoading} userLat={userLat} userLng={userLng} />
     </div>
   )

@@ -32,9 +32,6 @@ function HomeFeed({ user }: { user: Resident }) {
           <p className="text-sm text-gray-500">Pays de Landivisiau</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <a href="/skills" className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">
-            Mes compétences
-          </a>
           <a href="/exchanges" className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">
             Mes échanges
           </a>

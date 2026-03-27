@@ -7,7 +7,7 @@ export default async function residentsRoutes(app: FastifyInstance) {
   app.get('/residents', async (_req, reply) => {
     const { data, error } = await supabase
       .from('resident')
-      .select('id, first_name, credit_balance, availability, lat, lng, city, skill (id)')
+      .select('id, first_name, credit_balance, availability, lat, lng, address, city, skill (id)')
       .order('first_name')
 
     if (error) return reply.status(500).send({ error: error.message })
@@ -26,9 +26,17 @@ export default async function residentsRoutes(app: FastifyInstance) {
       availability?: string | null
     }
 
+    const { data: org } = await supabase
+      .from('organization')
+      .select('starting_credits')
+      .eq('id', body.organization_id)
+      .single()
+
+    const startingCredits = org?.starting_credits ?? 1
+
     const { data, error } = await supabase
       .from('resident')
-      .insert({ ...body, credit_balance: 0 })
+      .insert({ ...body, credit_balance: startingCredits })
       .select('*')
       .single()
 
@@ -40,14 +48,16 @@ export default async function residentsRoutes(app: FastifyInstance) {
   app.get('/residents/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
 
-    const { data, error } = await supabase
-      .from('resident')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const [{ data, error }, { count: given }, { count: received }] = await Promise.all([
+      supabase.from('resident').select('*').eq('id', id).single(),
+      supabase.from('exchange').select('*', { count: 'exact', head: true })
+        .eq('provider_id', id).eq('status', 'completed'),
+      supabase.from('exchange').select('*', { count: 'exact', head: true })
+        .eq('requester_id', id).eq('status', 'completed'),
+    ])
 
     if (error) return reply.status(404).send({ error: 'Resident not found' })
-    return reply.send(data)
+    return reply.send({ ...data, services_given: given ?? 0, services_received: received ?? 0 })
   })
 
   // GET /api/residents/:id/skills

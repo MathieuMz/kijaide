@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CATEGORIES } from '@/constants/categories'
 import { haversineKm, formatDistance } from '@/lib/geo'
 import type { Skill } from '@/lib/types'
+import ResidentCard from '@/components/ResidentCard'
 
 interface Props {
   service: Skill
@@ -22,38 +23,34 @@ export default function ServiceCard({ service: skill, userLat, userLng }: Props)
       ? haversineKm(userLat, userLng, skillLat, skillLng)
       : null
 
+  const locationLabel = distance != null ? formatDistance(distance) : (resident?.city ?? null)
+
   return (
     <Link
       href={`/skills/${skill.id}`}
       className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-emerald-400 transition-colors"
     >
-      <div className="flex gap-3 mb-3">
+      {/* Compétence */}
+      <div className="flex gap-2.5 mb-3">
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
           style={{ backgroundColor: cat?.bg ?? '#f5f5f5' }}
         >
           {cat?.emoji ?? '🔧'}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900">{subcatLabel}</p>
+          <p className="text-sm font-medium text-gray-800">{subcatLabel}</p>
           {skill.comment && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
               {skill.comment}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap border-t border-gray-100 pt-2.5">
-        <span className="text-xs bg-gray-100 text-gray-500 rounded-full px-2.5 py-1">
-          {distance != null ? formatDistance(distance) : (resident?.city ?? 'Commune inconnue')}
-        </span>
-        {resident?.availability && (
-          <span className="text-xs text-gray-400 truncate max-w-[180px]">
-            📅 {resident.availability}
-          </span>
-        )}
-        <span className="ml-auto text-xs text-gray-500">{resident?.first_name}</span>
+      {/* Résident */}
+      <div className="pt-3 border-t border-gray-100">
+        {resident && <ResidentCard resident={resident} locationLabel={locationLabel} />}
       </div>
     </Link>
   )

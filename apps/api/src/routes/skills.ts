@@ -1,6 +1,33 @@
 import { FastifyInstance } from 'fastify'
 import { supabase } from '../lib/supabase'
 
+async function enrichWithStats(skills: any[]) {
+  const residentIds = [...new Set(skills.map((s) => s.resident?.id).filter(Boolean))] as string[]
+  if (!residentIds.length) return skills
+
+  const { data: exchanges } = await supabase
+    .from('exchange')
+    .select('provider_id, requester_id')
+    .eq('status', 'completed')
+    .or(`provider_id.in.(${residentIds.join(',')}),requester_id.in.(${residentIds.join(',')})`)
+
+  const given: Record<string, number> = {}
+  const received: Record<string, number> = {}
+  for (const ex of exchanges ?? []) {
+    given[ex.provider_id] = (given[ex.provider_id] ?? 0) + 1
+    received[ex.requester_id] = (received[ex.requester_id] ?? 0) + 1
+  }
+
+  return skills.map((s) => ({
+    ...s,
+    resident: s.resident ? {
+      ...s.resident,
+      services_given: given[s.resident.id] ?? 0,
+      services_received: received[s.resident.id] ?? 0,
+    } : s.resident,
+  }))
+}
+
 export default async function skillsRoutes(app: FastifyInstance) {
 
   // GET /api/skills
@@ -21,9 +48,7 @@ export default async function skillsRoutes(app: FastifyInstance) {
           availability,
           lat,
           lng,
-          city,
-          lat,
-          lng
+          city
         )
       `)
       .order('id')
@@ -33,7 +58,7 @@ export default async function skillsRoutes(app: FastifyInstance) {
 
     const { data, error } = await query
     if (error) return reply.status(500).send({ error: error.message })
-    return reply.send(data)
+    return reply.send(await enrichWithStats(data))
   })
 
   // GET /api/skills/:id
@@ -52,15 +77,14 @@ export default async function skillsRoutes(app: FastifyInstance) {
           availability,
           lat,
           lng,
-          city,
-          lat,
-          lng
+          city
         )
       `)
       .eq('id', id)
       .single()
 
     if (error) return reply.status(404).send({ error: 'Skill not found' })
-    return reply.send(data)
+    const [enriched] = await enrichWithStats([data])
+    return reply.send(enriched)
   })
 }

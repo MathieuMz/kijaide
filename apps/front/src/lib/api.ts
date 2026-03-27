@@ -1,4 +1,12 @@
+import { ExchangeStatus } from '@/lib/types'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL!
+
+export async function fetchOrganization(id: string) {
+  const res = await fetch(`${API_URL}/organizations/${id}`)
+  if (!res.ok) throw new Error('Organization not found')
+  return res.json()
+}
 
 export async function fetchSkills(params?: {
   category?: string
@@ -107,7 +115,7 @@ export async function fetchExchanges(residentId: string) {
 
 export async function updateExchangeStatus(
   id: string,
-  status: 'confirmed' | 'completed' | 'cancelled'
+  status: ExchangeStatus
 ) {
   const res = await fetch(`${API_URL}/exchanges/${id}/status`, {
     method: 'POST',

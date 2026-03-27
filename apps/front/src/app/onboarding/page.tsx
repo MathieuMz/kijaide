@@ -9,13 +9,17 @@ import { useCurrentUser } from '@/context/CurrentUser'
 // ─── Questions swipe ──────────────────────────────────────────────────────────
 
 const QUESTIONS: Record<CategoryId, string> = {
-  [CategoryId.JardinageBricolage]: 'Tu jardines ou tu bricoles à la maison ?',
-  [CategoryId.GardeAnimaux]:       'Tu peux garder des enfants ou des animaux ?',
-  [CategoryId.CoursesMobilite]:    'Tu as une voiture et tu peux rendre service ?',
-  [CategoryId.CuisineRepas]:       'Tu cuisines avec plaisir et tu veux partager ?',
-  [CategoryId.InformatiqueAdmin]:  "Tu es à l'aise avec le numérique ou les démarches admin ?",
-  [CategoryId.SoutienScolaire]:    "Tu peux aider quelqu'un à apprendre quelque chose ?",
-  [CategoryId.Compagnie]:          "Tu aimes rendre visite ou accompagner quelqu'un ?",
+  [CategoryId.JardinageBricolage]:  'Tu jardines ou tu bricoles à la maison ?',
+  [CategoryId.GardeAnimaux]:        'Tu peux garder des enfants ou des animaux ?',
+  [CategoryId.CoursesMobilite]:     'Tu as une voiture et tu peux rendre service ?',
+  [CategoryId.CuisineRepas]:        'Tu cuisines avec plaisir et tu veux partager ?',
+  [CategoryId.InformatiqueAdmin]:   "Tu es à l'aise avec le numérique ou les démarches admin ?",
+  [CategoryId.SoutienScolaire]:     "Tu peux aider quelqu'un à apprendre quelque chose ?",
+  [CategoryId.Compagnie]:           "Tu aimes rendre visite ou accompagner quelqu'un ?",
+  [CategoryId.ArtisanatCreation]:   'Tu crées des choses de tes mains — bois, argile, textile... ?',
+  [CategoryId.BienEtreSport]:       'Tu pratiques une activité physique ou de bien-être ?',
+  [CategoryId.MusiqueArts]:         'Tu joues d\'un instrument, tu chantes ou tu crées artistiquement ?',
+  [CategoryId.NatureEnvironnement]: 'Tu es passionné(e) par la nature, les plantes ou le jardin naturel ?',
 }
 
 const AVAILABILITY_CHIPS = ['Le matin', 'L\'après-midi', 'Le soir', 'En semaine', 'Le weekend']
@@ -285,12 +289,11 @@ function DetailsStep({
             <div className="space-y-2">
               {subcats.map(sub => (
                 <div key={sub.id}>
-                  <label className="text-xs text-gray-500 block mb-1">{sub.label}</label>
                   <input
                     type="text"
                     value={comments[`${cat.id}:${sub.id}`] ?? ''}
                     onChange={e => setComment(`${cat.id}:${sub.id}`, e.target.value)}
-                    placeholder="Ajouter un détail..."
+                    placeholder={`Details pour ${sub.label} (facultatif)`}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
                   />
                 </div>

@@ -45,10 +45,7 @@ export default function ServiceList({ services, isPending, userLat, userLng }: P
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-gray-400 mb-3">
-        {sorted.length} proposition{sorted.length > 1 ? 's' : ''} de service
-      </p>
-      {sorted.map((service) => (
+{sorted.map((service) => (
         <ServiceCard key={service.id} service={service} userLat={userLat} userLng={userLng} />
       ))}
     </div>

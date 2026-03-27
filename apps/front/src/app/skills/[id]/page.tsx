@@ -5,7 +5,10 @@ import { useParams, useRouter } from 'next/navigation'
 import { fetchSkillById, createExchange } from '@/lib/api'
 import { CATEGORIES } from '@/constants/categories'
 import { useCurrentUser } from '@/context/CurrentUser'
+import { useOrgConfig } from '@/context/OrgConfig'
 import type { Skill } from '@/lib/types'
+import { CreditPolicy } from '@/lib/types'
+import ResidentCard from '@/components/ResidentCard'
 
 type ContactStep = 'idle' | 'message' | 'sent'
 
@@ -13,6 +16,7 @@ export default function SkillPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { user } = useCurrentUser()
+  const org = useOrgConfig()
 
   const [skill, setSkill] = useState<Skill | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -109,25 +113,9 @@ export default function SkillPage() {
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
             Proposé par
           </p>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-medium text-emerald-700 flex-shrink-0">
-              {resident?.first_name?.[0] ?? '?'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">{resident?.first_name}</p>
-              <p className="text-xs text-gray-500">
-                {resident?.city}
-                {resident?.credit_balance != null && (
-                  <span className="ml-2 text-emerald-600">
-                    · {resident.credit_balance} services rendus
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="text-xs bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1 font-medium">
-              Vérifié
-            </div>
-          </div>
+          {resident && (
+            <ResidentCard resident={resident} locationLabel={resident.city} />
+          )}
           {resident?.bio && (
             <p className="text-sm text-gray-500 mt-3 leading-relaxed">{resident.bio}</p>
           )}
@@ -136,14 +124,34 @@ export default function SkillPage() {
         {/* Contact */}
         {skill.resident_id !== user?.id ? (
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            {contactStep === 'idle' && (
-              <button
-                onClick={() => setContactStep('message')}
-                className="w-full py-3 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors"
-              >
-                Je suis intéressé(e)
-              </button>
-            )}
+            {contactStep === 'idle' && (() => {
+              const noCredit = (user?.credit_balance ?? 0) <= 0
+              const policy = org?.credit_policy ?? CreditPolicy.Open
+              const isBlocked = noCredit && policy === CreditPolicy.Block
+              const isWarned = noCredit && policy === CreditPolicy.Warn
+              return (
+                <>
+                  {isWarned && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                      Tu n&apos;as plus de crédit disponible. Pense à rendre service en retour.
+                    </p>
+                  )}
+                  {isBlocked ? (
+                    <div className="text-center py-2">
+                      <p className="text-sm font-medium text-gray-900 mb-1">Crédit insuffisant</p>
+                      <p className="text-xs text-gray-500">Tu dois rendre un service avant de pouvoir en demander un nouveau.</p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setContactStep('message')}
+                      className="w-full py-3 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors"
+                    >
+                      Je suis intéressé(e)
+                    </button>
+                  )}
+                </>
+              )
+            })()}
 
             {contactStep === 'message' && (
               <div>
