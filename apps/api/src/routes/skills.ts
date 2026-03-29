@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { supabase } from '../lib/supabase'
+import { APPRECIATION_DISPLAY_THRESHOLD } from '../lib/constants'
 
 async function enrichWithStats(skills: any[]) {
   const residentIds = [...new Set(skills.map((s) => s.resident?.id).filter(Boolean))] as string[]
@@ -103,6 +104,22 @@ export default async function skillsRoutes(app: FastifyInstance) {
 
     if (error) return reply.status(404).send({ error: 'Skill not found' })
     const [enriched] = await enrichWithStats([data])
+
+    if (enriched.resident?.id) {
+      const { data: appreciationsRaw } = await supabase
+        .from('appreciation')
+        .select('adjective')
+        .eq('receiver_id', enriched.resident.id)
+
+      const counts: Record<string, number> = {}
+      for (const a of appreciationsRaw ?? []) {
+        counts[a.adjective] = (counts[a.adjective] ?? 0) + 1
+      }
+      enriched.resident.appreciations = Object.entries(counts)
+        .filter(([, count]) => count >= APPRECIATION_DISPLAY_THRESHOLD)
+        .map(([adjective]) => adjective)
+    }
+
     return reply.send(enriched)
   })
 }

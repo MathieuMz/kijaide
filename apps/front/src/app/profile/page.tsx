@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useCurrentUser } from '@/context/CurrentUser'
 import type { Resident } from '@/lib/types'
 import InfosTab from './InfosTab'
@@ -22,7 +22,9 @@ const TAB_LABEL: Record<Tab, string> = {
 
 function ProfilePage({ user, setUser }: { user: Resident; setUser: (u: Resident | null) => void }) {
   const router = useRouter()
-  const [tab, setTab] = useState<Tab>(Tab.Competences)
+  const searchParams = useSearchParams()
+  const initialTab = (searchParams.get('tab') as Tab | null) ?? Tab.Competences
+  const [tab, setTab] = useState<Tab>(initialTab)
 
   return (
     <main className="min-h-screen bg-white">

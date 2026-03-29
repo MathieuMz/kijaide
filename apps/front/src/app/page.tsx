@@ -79,12 +79,20 @@ function HomeFeed({ user }: { user: Resident }) {
                 Découvre leurs compétences et propose les tiennes.
               </p>
             </div>
-            <a
-              href="/onboarding"
-              className="ml-auto hidden sm:inline-flex text-xs font-medium text-emerald-700 border border-emerald-300 rounded-lg px-3 py-1.5 hover:bg-emerald-100 transition-colors flex-shrink-0"
-            >
-              Proposer mes compétences
-            </a>
+            <div className="ml-auto hidden sm:flex gap-2 flex-shrink-0">
+              <a
+                href="/profile?tab=competences"
+                className="text-xs font-medium text-emerald-700 border border-emerald-300 rounded-lg px-3 py-1.5 hover:bg-emerald-100 transition-colors"
+              >
+                Mes compétences
+              </a>
+              <a
+                href="/profile?tab=interests"
+                className="text-xs font-medium text-emerald-700 border border-emerald-300 rounded-lg px-3 py-1.5 hover:bg-emerald-100 transition-colors"
+              >
+                Mes intérêts
+              </a>
+            </div>
           </div>
         )}
 

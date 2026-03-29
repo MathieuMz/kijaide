@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { CATEGORIES } from '@/constants/categories'
-import { fetchSkills } from '@/lib/api'
 import type { Skill } from '@/lib/types'
 import CategoryGrid from './CategoryGrid'
 import ServiceList from './ServiceList'
@@ -15,45 +14,30 @@ interface Props {
 }
 
 export default function ServiceExplorer({ initialSkills, categories, userLat, userLng }: Props) {
-  const [skills, setSkills] = useState<Skill[]>(initialSkills)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  // Sur mobile, les filtres sont masqués derrière un bouton
   const [showFiltersMobile, setShowFiltersMobile] = useState(false)
 
-  const load = useCallback(async (
-    category: string | null,
-    subcategory: string | null,
-  ) => {
-    setIsLoading(true)
-    try {
-      const data = await fetchSkills({
-        category: category ?? undefined,
-        subcategory: subcategory ?? undefined,
-      })
-      setSkills(data)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const filtered = activeCategory
+    ? initialSkills.filter(s =>
+        s.category === activeCategory &&
+        (activeSubcategory === null || s.subcategory === activeSubcategory)
+      )
+    : initialSkills
 
   function handleCategoryChange(id: string | null) {
     setActiveCategory(id)
     setActiveSubcategory(null)
-    load(id, null)
   }
 
   function handleSubcategoryChange(sub: string | null) {
     setActiveSubcategory(sub)
-    load(activeCategory, sub)
   }
 
   function handleToggleMobileFilters() {
     if (showFiltersMobile && activeCategory) {
       setActiveCategory(null)
       setActiveSubcategory(null)
-      load(null, null)
     }
     setShowFiltersMobile(v => !v)
   }
@@ -133,7 +117,7 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
         </div>
       )}
 
-      <ServiceList services={skills} isPending={isLoading} userLat={userLat} userLng={userLng} />
+      <ServiceList services={filtered} isPending={false} userLat={userLat} userLng={userLng} />
     </div>
   )
 }
