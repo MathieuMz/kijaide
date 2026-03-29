@@ -686,14 +686,14 @@ export default function OnboardingPage() {
           const title = comments[`${catId}:${AUTRE_SUBCAT_ID}`] ?? ''
           const desc = comments[`${catId}:${AUTRE_SUBCAT_ID}:desc`] ?? ''
           return {
-            category: catId,
-            subcategory: subcatId,
+            category: catId as string,
+            subcategory: subcatId as string,
             comment: desc ? `${title}\n${desc}` : title,
           }
         }
         return {
-          category: catId,
-          subcategory: subcatId,
+          category: catId as string,
+          subcategory: subcatId as string,
           comment: comments[`${catId}:${subcatId}`] ?? null,
         }
       })
@@ -703,9 +703,9 @@ export default function OnboardingPage() {
     const interests = interestCats.flatMap(catId => {
       const subs = interestSubcats[catId] ?? []
       if (subs.length > 0) {
-        return subs.map(subcatId => ({ category: catId, subcategory: subcatId }))
+        return subs.map(subcatId => ({ category: catId as string, subcategory: subcatId as string | null }))
       }
-      return [{ category: catId, subcategory: null }]
+      return [{ category: catId as string, subcategory: null as string | null }]
     })
 
     try {

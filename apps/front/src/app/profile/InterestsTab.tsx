@@ -63,9 +63,9 @@ export default function InterestsTab({ user }: { user: Resident }) {
   async function handleSave() {
     setIsSaving(true)
     const payload = (Object.entries(interests) as [CategoryId, string[]][]).flatMap(
-      ([catId, subcats]) => {
-        if (subcats.length === 0) return [{ category: catId, subcategory: null }]
-        return subcats.map(subcatId => ({ category: catId, subcategory: subcatId }))
+      ([catId, subcats]): Array<{ category: string; subcategory: string | null }> => {
+        if (subcats.length === 0) return [{ category: catId as string, subcategory: null }]
+        return subcats.map(subcatId => ({ category: catId as string, subcategory: subcatId }))
       }
     )
     try {
