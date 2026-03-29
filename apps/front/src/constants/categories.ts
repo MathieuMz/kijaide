@@ -12,6 +12,9 @@ export enum CategoryId {
   NatureEnvironnement = 'nature-environnement',
 }
 
+// Subcatégorie spéciale "Autre" — texte libre, stocké dans le champ `comment` de la skill
+export const AUTRE_SUBCAT_ID = 'autre' as const
+
 // ─── Sous-catégories (IDs existants inchangés) ───────────────────────────────
 
 export enum JardinageBricolageSubcatId {
@@ -125,8 +128,11 @@ export type SubcatId =
   | BienEtreSportSubcatId
   | MusiqueArtsSubcatId
   | NatureEnvironnementSubcatId
+  | typeof AUTRE_SUBCAT_ID
 
 // ─── Catégories ──────────────────────────────────────────────────────────────
+
+const AUTRE_CHIP = { id: AUTRE_SUBCAT_ID, label: 'Autre' } as const
 
 export const CATEGORIES = [
   {
@@ -144,6 +150,7 @@ export const CATEGORIES = [
       { id: JardinageBricolageSubcatId.PeintureBatiment, label: 'Peinture bâtiment' },
       { id: JardinageBricolageSubcatId.Maconnerie,       label: 'Maçonnerie' },
       { id: JardinageBricolageSubcatId.ReparationVelos,  label: 'Réparation vélos' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -157,6 +164,7 @@ export const CATEGORIES = [
       { id: GardeAnimauxSubcatId.GardeAnimaux,       label: 'Garde animaux' },
       { id: GardeAnimauxSubcatId.Dressage,           label: 'Dressage' },
       { id: GardeAnimauxSubcatId.ToilettageAnimaux,  label: 'Toilettage' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -168,6 +176,7 @@ export const CATEGORIES = [
       { id: CoursesMobiliteSubcatId.Courses,          label: 'Courses' },
       { id: CoursesMobiliteSubcatId.TransportMedical, label: 'Transport médical' },
       { id: CoursesMobiliteSubcatId.Covoiturage,      label: 'Covoiturage' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -182,6 +191,7 @@ export const CATEGORIES = [
       { id: CuisineRepasSubcatId.LactoFermentation, label: 'Lacto-fermentation' },
       { id: CuisineRepasSubcatId.Boulangerie,       label: 'Boulangerie & pain' },
       { id: CuisineRepasSubcatId.Confiture,         label: 'Confitures & gelées' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -194,6 +204,7 @@ export const CATEGORIES = [
       { id: InformatiqueAdminSubcatId.Ordinateur,         label: 'Ordinateur' },
       { id: InformatiqueAdminSubcatId.DemarchesEnLigne,   label: 'Démarches en ligne' },
       { id: InformatiqueAdminSubcatId.RedactionCourriers, label: 'Rédaction courriers' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -212,6 +223,7 @@ export const CATEGORIES = [
       { id: SoutienScolaireSubcatId.Sciences,       label: 'Sciences (SVT)' },
       { id: SoutienScolaireSubcatId.PhysiqueChimie, label: 'Physique-Chimie' },
       { id: SoutienScolaireSubcatId.Philosophie,    label: 'Philosophie' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -224,6 +236,7 @@ export const CATEGORIES = [
       { id: CompagnieSubcatId.JeuxDeSociete,    label: 'Jeux de société' },
       { id: CompagnieSubcatId.Balade,           label: 'Balade' },
       { id: CompagnieSubcatId.LectureVoixHaute, label: 'Lecture à voix haute' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -232,12 +245,13 @@ export const CATEGORIES = [
     emoji: '🎨',
     bg: '#FFF8E1',
     subcategories: [
-      { id: ArtisanatCreationSubcatId.Menuiserie,   label: 'Menuiserie' },
-      { id: ArtisanatCreationSubcatId.Poterie,      label: 'Poterie' },
+      { id: ArtisanatCreationSubcatId.Menuiserie,    label: 'Menuiserie' },
+      { id: ArtisanatCreationSubcatId.Poterie,       label: 'Poterie' },
       { id: ArtisanatCreationSubcatId.TricotCrochet, label: 'Tricot / crochet' },
-      { id: ArtisanatCreationSubcatId.Vannerie,     label: 'Vannerie' },
-      { id: ArtisanatCreationSubcatId.SavonBougies, label: 'Savon & bougies' },
-      { id: ArtisanatCreationSubcatId.Bijoux,       label: 'Bijoux' },
+      { id: ArtisanatCreationSubcatId.Vannerie,      label: 'Vannerie' },
+      { id: ArtisanatCreationSubcatId.SavonBougies,  label: 'Savon & bougies' },
+      { id: ArtisanatCreationSubcatId.Bijoux,        label: 'Bijoux' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -246,12 +260,13 @@ export const CATEGORIES = [
     emoji: '🏃',
     bg: '#E8F5E9',
     subcategories: [
-      { id: BienEtreSportSubcatId.Yoga,          label: 'Yoga' },
-      { id: BienEtreSportSubcatId.Meditation,    label: 'Méditation' },
-      { id: BienEtreSportSubcatId.Randonnee,     label: 'Randonnée' },
-      { id: BienEtreSportSubcatId.Velo,          label: 'Vélo' },
-      { id: BienEtreSportSubcatId.Sophrologie,   label: 'Sophrologie' },
+      { id: BienEtreSportSubcatId.Yoga,           label: 'Yoga' },
+      { id: BienEtreSportSubcatId.Meditation,     label: 'Méditation' },
+      { id: BienEtreSportSubcatId.Randonnee,      label: 'Randonnée' },
+      { id: BienEtreSportSubcatId.Velo,           label: 'Vélo' },
+      { id: BienEtreSportSubcatId.Sophrologie,    label: 'Sophrologie' },
       { id: BienEtreSportSubcatId.SportCollectif, label: 'Sport collectif' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -267,6 +282,7 @@ export const CATEGORIES = [
       { id: MusiqueArtsSubcatId.Peinture, label: 'Peinture' },
       { id: MusiqueArtsSubcatId.Photo,    label: 'Photographie' },
       { id: MusiqueArtsSubcatId.Video,    label: 'Vidéo' },
+      AUTRE_CHIP,
     ],
   },
   {
@@ -281,6 +297,7 @@ export const CATEGORIES = [
       { id: NatureEnvironnementSubcatId.Compostage,            label: 'Compostage' },
       { id: NatureEnvironnementSubcatId.IdentificationPlantes, label: 'Identification de plantes' },
       { id: NatureEnvironnementSubcatId.GrainesBoutures,       label: 'Graines & boutures' },
+      AUTRE_CHIP,
     ],
   },
 ] as const

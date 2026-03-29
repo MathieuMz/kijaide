@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { supabase } from '../lib/supabase'
+import { APPRECIATION_DISPLAY_THRESHOLD } from '../lib/constants'
 
 export default async function residentsRoutes(app: FastifyInstance) {
 
@@ -19,6 +20,8 @@ export default async function residentsRoutes(app: FastifyInstance) {
     const body = req.body as {
       first_name: string
       organization_id: string
+      email?: string | null
+      email_digest?: boolean
       lat?: number | null
       lng?: number | null
       address?: string | null
@@ -48,16 +51,33 @@ export default async function residentsRoutes(app: FastifyInstance) {
   app.get('/residents/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
 
-    const [{ data, error }, { count: given }, { count: received }] = await Promise.all([
+    const [{ data, error }, { count: given }, { count: received }, { data: appreciationsRaw }] = await Promise.all([
       supabase.from('resident').select('*').eq('id', id).single(),
       supabase.from('exchange').select('*', { count: 'exact', head: true })
         .eq('provider_id', id).eq('status', 'completed'),
       supabase.from('exchange').select('*', { count: 'exact', head: true })
         .eq('requester_id', id).eq('status', 'completed'),
+      supabase.from('appreciation').select('adjective').eq('receiver_id', id),
     ])
 
     if (error) return reply.status(404).send({ error: 'Resident not found' })
-    return reply.send({ ...data, services_given: given ?? 0, services_received: received ?? 0 })
+
+    // Adjectifs affichés uniquement si 3+ personnes ont donné le même
+    const counts: Record<string, number> = {}
+    for (const a of appreciationsRaw ?? []) {
+      counts[a.adjective] = (counts[a.adjective] ?? 0) + 1
+    }
+    console.log(counts)
+    const appreciations = Object.entries(counts)
+      .filter(([, count]) => count >= APPRECIATION_DISPLAY_THRESHOLD)
+      .map(([adjective]) => adjective)
+
+    return reply.send({
+      ...data,
+      services_given: given ?? 0,
+      services_received: received ?? 0,
+      appreciations,
+    })
   })
 
   // GET /api/residents/:id/skills
@@ -98,7 +118,7 @@ export default async function residentsRoutes(app: FastifyInstance) {
   // POST /api/residents/:id/skills — bulk replace
   app.post('/residents/:id/skills', async (req, reply) => {
     const { id } = req.params as { id: string }
-    const skills = req.body as Array<{ category: string; subcategory?: string | null }>
+    const skills = req.body as Array<{ category: string; subcategory?: string | null; comment?: string | null }>
 
     await supabase.from('skill').delete().eq('resident_id', id)
 
@@ -107,6 +127,37 @@ export default async function residentsRoutes(app: FastifyInstance) {
     const { data, error } = await supabase
       .from('skill')
       .insert(skills.map(s => ({ ...s, resident_id: id })))
+      .select()
+
+    if (error) return reply.status(500).send({ error: error.message })
+    return reply.status(201).send(data)
+  })
+
+  // GET /api/residents/:id/interests
+  app.get('/residents/:id/interests', async (req, reply) => {
+    const { id } = req.params as { id: string }
+
+    const { data, error } = await supabase
+      .from('interest')
+      .select('*')
+      .eq('resident_id', id)
+
+    if (error) return reply.status(500).send({ error: error.message })
+    return reply.send(data)
+  })
+
+  // POST /api/residents/:id/interests — bulk replace
+  app.post('/residents/:id/interests', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const interests = req.body as Array<{ category: string; subcategory?: string | null }>
+
+    await supabase.from('interest').delete().eq('resident_id', id)
+
+    if (!interests.length) return reply.send([])
+
+    const { data, error } = await supabase
+      .from('interest')
+      .insert(interests.map(i => ({ ...i, resident_id: id })))
       .select()
 
     if (error) return reply.status(500).send({ error: error.message })

@@ -32,9 +32,10 @@ export default async function skillsRoutes(app: FastifyInstance) {
 
   // GET /api/skills
   app.get('/skills', async (req, reply) => {
-    const { category, subcategory } = req.query as {
+    const { category, subcategory, match_resident_id } = req.query as {
       category?: string
       subcategory?: string
+      match_resident_id?: string
     }
 
     let query = supabase
@@ -55,6 +56,23 @@ export default async function skillsRoutes(app: FastifyInstance) {
 
     if (category)    query = query.eq('category', category)
     if (subcategory) query = query.eq('subcategory', subcategory)
+
+    if (match_resident_id) {
+      const { data: interests } = await supabase
+        .from('interest')
+        .select('category, subcategory')
+        .eq('resident_id', match_resident_id)
+
+      if (!interests?.length) return reply.send([])
+
+      // Pour chaque intérêt : si subcategory null → toute la catégorie, sinon catégorie + sous-catégorie
+      const orParts = interests.map(i =>
+        i.subcategory
+          ? `and(category.eq.${i.category},subcategory.eq.${i.subcategory})`
+          : `category.eq.${i.category}`
+      )
+      query = query.or(orParts.join(','))
+    }
 
     const { data, error } = await query
     if (error) return reply.status(500).send({ error: error.message })

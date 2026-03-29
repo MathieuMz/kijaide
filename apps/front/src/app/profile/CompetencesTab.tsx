@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { fetchResidentSkills, saveResidentSkills } from '@/lib/api'
-import { CATEGORIES, CategoryId, SubcatId } from '@/constants/categories'
+import { CATEGORIES, CategoryId, SubcatId, AUTRE_SUBCAT_ID } from '@/constants/categories'
 import type { Resident } from '@/lib/types'
 
 type SkillsState = Partial<Record<CategoryId, SubcatId[]>>
@@ -17,7 +17,15 @@ function buildState(skills: Array<{ category: string; subcategory: string | null
     const subcatId = skill.subcategory as SubcatId
     if (!selected[catId]) selected[catId] = []
     selected[catId]!.push(subcatId)
-    if (skill.comment) comments[`${catId}:${subcatId}`] = skill.comment
+    if (skill.comment) {
+      if (subcatId === AUTRE_SUBCAT_ID) {
+        const [title, desc] = skill.comment.split('\n')
+        comments[`${catId}:${AUTRE_SUBCAT_ID}`] = title ?? ''
+        if (desc) comments[`${catId}:${AUTRE_SUBCAT_ID}:desc`] = desc
+      } else {
+        comments[`${catId}:${subcatId}`] = skill.comment
+      }
+    }
   }
   return { selected, comments }
 }
@@ -54,8 +62,8 @@ export default function CompetencesTab({ user }: { user: Resident }) {
     setSaved(false)
   }
 
-  function setComment(catId: CategoryId, subcatId: SubcatId, value: string) {
-    setComments(prev => ({ ...prev, [`${catId}:${subcatId}`]: value }))
+  function setComment(key: string, value: string) {
+    setComments(prev => ({ ...prev, [key]: value }))
     setSaved(false)
   }
 
@@ -63,11 +71,22 @@ export default function CompetencesTab({ user }: { user: Resident }) {
     setIsSaving(true)
     const skills = (Object.entries(selected) as [CategoryId, SubcatId[]][]).flatMap(
       ([catId, subcats]) =>
-        subcats.map(subcatId => ({
-          category: catId,
-          subcategory: subcatId,
-          comment: comments[`${catId}:${subcatId}`] ?? null,
-        }))
+        subcats.map(subcatId => {
+          if (subcatId === AUTRE_SUBCAT_ID) {
+            const title = comments[`${catId}:${AUTRE_SUBCAT_ID}`] ?? ''
+            const desc = comments[`${catId}:${AUTRE_SUBCAT_ID}:desc`] ?? ''
+            return {
+              category: catId,
+              subcategory: subcatId,
+              comment: desc ? `${title}\n${desc}` : title,
+            }
+          }
+          return {
+            category: catId,
+            subcategory: subcatId,
+            comment: comments[`${catId}:${subcatId}`] ?? null,
+          }
+        })
     )
     try {
       await saveResidentSkills(user.id, skills)
@@ -87,13 +106,18 @@ export default function CompetencesTab({ user }: { user: Resident }) {
       <div className="divide-y divide-gray-100">
         {CATEGORIES.map(cat => {
           const catSelected = selected[cat.id] ?? []
+          const autreSelected = catSelected.includes(AUTRE_SUBCAT_ID)
+          const regularSubcats = cat.subcategories.filter(s => s.id !== AUTRE_SUBCAT_ID)
+
           return (
             <div key={cat.id} className="py-4">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                 {cat.emoji} {cat.label}
               </p>
+
+              {/* Sous-catégories normales */}
               <div className="flex flex-wrap gap-2 mb-3">
-                {cat.subcategories.map(sub => {
+                {regularSubcats.map(sub => {
                   const active = catSelected.includes(sub.id as SubcatId)
                   return (
                     <button
@@ -110,7 +134,9 @@ export default function CompetencesTab({ user }: { user: Resident }) {
                   )
                 })}
               </div>
-              {cat.subcategories
+
+              {/* Champs détail pour les sous-catégories normales sélectionnées */}
+              {regularSubcats
                 .filter(sub => catSelected.includes(sub.id as SubcatId))
                 .map(sub => (
                   <div key={sub.id} className="mb-2">
@@ -118,12 +144,44 @@ export default function CompetencesTab({ user }: { user: Resident }) {
                     <input
                       type="text"
                       value={comments[`${cat.id}:${sub.id}`] ?? ''}
-                      onChange={e => setComment(cat.id, sub.id as SubcatId, e.target.value)}
+                      onChange={e => setComment(`${cat.id}:${sub.id}`, e.target.value)}
                       placeholder="Ajouter un détail... (facultatif)"
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-emerald-400"
                     />
                   </div>
                 ))}
+
+              {/* Autre — séparé */}
+              <div className="border-t border-gray-100 pt-3 space-y-2">
+                <button
+                  onClick={() => toggle(cat.id, AUTRE_SUBCAT_ID)}
+                  className={`px-3 py-1.5 rounded-full border text-sm transition-colors ${
+                    autreSelected
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  Autre
+                </button>
+                {autreSelected && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={comments[`${cat.id}:${AUTRE_SUBCAT_ID}`] ?? ''}
+                      onChange={e => setComment(`${cat.id}:${AUTRE_SUBCAT_ID}`, e.target.value)}
+                      placeholder="Ce que tu proposes (ex : Fabrication de savons) *"
+                      className="w-full border border-emerald-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-emerald-400 bg-emerald-50"
+                    />
+                    <input
+                      type="text"
+                      value={comments[`${cat.id}:${AUTRE_SUBCAT_ID}:desc`] ?? ''}
+                      onChange={e => setComment(`${cat.id}:${AUTRE_SUBCAT_ID}:desc`, e.target.value)}
+                      placeholder="Description supplémentaire (facultatif)"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-emerald-400"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}

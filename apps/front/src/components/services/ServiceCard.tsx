@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CATEGORIES } from '@/constants/categories'
+import { CATEGORIES, AUTRE_SUBCAT_ID } from '@/constants/categories'
 import { haversineKm, formatDistance } from '@/lib/geo'
 import type { Skill } from '@/lib/types'
 import ResidentCard from '@/components/ResidentCard'
@@ -8,11 +8,17 @@ interface Props {
   service: Skill
   userLat?: number | null
   userLng?: number | null
+  highlighted?: boolean
 }
 
-export default function ServiceCard({ service: skill, userLat, userLng }: Props) {
+export default function ServiceCard({ service: skill, userLat, userLng, highlighted = false }: Props) {
   const cat = CATEGORIES.find((c) => c.id === skill.category)
-  const subcatLabel = cat?.subcategories.find((s) => s.id === skill.subcategory)?.label ?? skill.subcategory
+  const isAutre = skill.subcategory === AUTRE_SUBCAT_ID
+  const [autreTitle, autreDesc] = isAutre ? (skill.comment ?? '').split('\n') : []
+  const subcatLabel = isAutre
+    ? (autreTitle || 'Autre')
+    : (cat?.subcategories.find((s) => s.id === skill.subcategory)?.label ?? skill.subcategory)
+  const displayComment = isAutre ? (autreDesc ?? null) : skill.comment
   const resident = skill.resident
 
   const skillLat = resident?.lat ?? null
@@ -28,8 +34,15 @@ export default function ServiceCard({ service: skill, userLat, userLng }: Props)
   return (
     <Link
       href={`/skills/${skill.id}`}
-      className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-emerald-400 transition-colors"
+      className={`block bg-white rounded-xl border p-4 transition-colors ${
+        highlighted
+          ? 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-500'
+          : 'border-gray-200 hover:border-emerald-400'
+      }`}
     >
+      {highlighted && (
+        <p className="text-xs text-emerald-600 font-medium mb-2">✦ Correspond à tes intérêts</p>
+      )}
       {/* Compétence */}
       <div className="flex gap-2.5 mb-3">
         <div
@@ -40,9 +53,9 @@ export default function ServiceCard({ service: skill, userLat, userLng }: Props)
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-800">{subcatLabel}</p>
-          {skill.comment && (
+          {displayComment && (
             <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
-              {skill.comment}
+              {displayComment}
             </p>
           )}
         </div>

@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fetchExchanges, updateExchangeStatus } from '@/lib/api'
-import { CATEGORIES } from '@/constants/categories'
+import { fetchExchanges, updateExchangeStatus, createAppreciation } from '@/lib/api'
+import { CATEGORIES, AUTRE_SUBCAT_ID } from '@/constants/categories'
 import { useCurrentUser } from '@/context/CurrentUser'
 import { ExchangeStatus } from '@/lib/types'
+import { ADJECTIVES } from '@/constants/adjectives'
+import type { AdjectiveId } from '@/constants/adjectives'
 
 interface Exchange {
   id: string
@@ -39,11 +41,21 @@ const STATUS_COLOR: Record<ExchangeStatus, string> = {
   [ExchangeStatus.Cancelled]: 'bg-gray-100 text-gray-500',
 }
 
+
 function formatDuration(minutes: number | null): string {
   if (!minutes) return ''
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
   return m > 0 ? `${h}h${m.toString().padStart(2, '0')}` : `${h}h`
+}
+
+function skillLabel(skill: Exchange['skill']): string {
+  if (!skill) return ''
+  if (skill.subcategory === AUTRE_SUBCAT_ID) {
+    return skill.comment?.split('\n')[0] ?? 'Autre'
+  }
+  const cat = CATEGORIES.find(c => c.id === skill.category)
+  return cat?.subcategories.find(s => s.id === skill.subcategory)?.label ?? skill.subcategory ?? ''
 }
 
 enum Tab {
@@ -64,6 +76,14 @@ export default function ExchangesPage() {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Received)
   const [updating, setUpdating] = useState<string | null>(null)
 
+  // Formulaire combiné "Marquer réalisé + appréciation"
+  const [completionOpen, setCompletionOpen] = useState<Set<string>>(new Set())
+  const [selectedAdjectives, setSelectedAdjectives] = useState<Record<string, AdjectiveId[]>>({})
+  const [appreciationDone, setAppreciationDone] = useState<Set<string>>(new Set())
+
+  // Formulaire appréciation seul (pour exchanges déjà completed au chargement)
+  const [appreciationOpen, setAppreciationOpen] = useState<Set<string>>(new Set())
+
   useEffect(() => {
     if (!user) return
     fetchExchanges(user.id)
@@ -81,6 +101,49 @@ export default function ExchangesPage() {
     } finally {
       setUpdating(null)
     }
+  }
+
+  async function handleCompleteWithAppreciation(exchange: Exchange) {
+    const adjectives = selectedAdjectives[exchange.id] ?? []
+    setUpdating(exchange.id)
+    try {
+      await updateExchangeStatus(exchange.id, ExchangeStatus.Completed)
+      if (adjectives.length > 0) {
+        await createAppreciation(exchange.id, adjectives)
+        setAppreciationDone(prev => new Set([...prev, exchange.id]))
+      }
+      setExchanges(prev =>
+        prev.map(e => e.id === exchange.id ? { ...e, status: ExchangeStatus.Completed, credits_transferred: 1 } : e)
+      )
+      setCompletionOpen(prev => { const s = new Set(prev); s.delete(exchange.id); return s })
+    } finally {
+      setUpdating(null)
+    }
+  }
+
+  async function handleAppreciation(exchange: Exchange) {
+    const adjectives = selectedAdjectives[exchange.id] ?? []
+    if (!adjectives.length || !user) return
+    setUpdating(exchange.id)
+    try {
+      await createAppreciation(exchange.id, adjectives)
+      setAppreciationDone(prev => new Set([...prev, exchange.id]))
+      setAppreciationOpen(prev => { const s = new Set(prev); s.delete(exchange.id); return s })
+    } finally {
+      setUpdating(null)
+    }
+  }
+
+  function toggleAdjective(exchangeId: string, adj: AdjectiveId) {
+    setSelectedAdjectives(prev => {
+      const current = prev[exchangeId] ?? []
+      return {
+        ...prev,
+        [exchangeId]: current.includes(adj)
+          ? current.filter(a => a !== adj)
+          : [...current, adj],
+      }
+    })
   }
 
   const received = exchanges.filter(e => e.provider.id === user?.id)
@@ -101,7 +164,6 @@ export default function ExchangesPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
 
-        {/* Tabs */}
         <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
           {([Tab.Received, Tab.Sent]).map(tab => (
             <button
@@ -121,7 +183,6 @@ export default function ExchangesPage() {
           ))}
         </div>
 
-        {/* Liste */}
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -138,16 +199,20 @@ export default function ExchangesPage() {
           <div className="space-y-3">
             {displayed.map(exchange => {
               const cat = CATEGORIES.find(c => c.id === exchange.skill?.category)
-              const subcatLabel = cat?.subcategories.find(s => s.id === exchange.skill?.subcategory)?.label ?? exchange.skill?.subcategory
-              const isReceived = exchange.provider.id === user?.id
-              const other = isReceived ? exchange.requester : exchange.provider
+              const isRequester = exchange.requester.id === user?.id
+              const other = isRequester ? exchange.provider : exchange.requester
               const isUpdating = updating === exchange.id
+              const isCompletionOpen = completionOpen.has(exchange.id)
+              const isAppreciationOpen = appreciationOpen.has(exchange.id)
+              const adjectives = selectedAdjectives[exchange.id] ?? []
+
+              // Appréciation rétroactive : échange déjà completed au chargement, requester, pas encore fait cette session
+              const canAppreciateRetro = isRequester
+                && exchange.status === ExchangeStatus.Completed
+                && !appreciationDone.has(exchange.id)
 
               return (
-                <div
-                  key={exchange.id}
-                  className="bg-white rounded-xl border border-gray-200 p-4"
-                >
+                <div key={exchange.id} className="bg-white rounded-xl border border-gray-200 p-4">
                   {/* Top */}
                   <div className="flex items-start gap-3 mb-3">
                     <div
@@ -158,18 +223,14 @@ export default function ExchangesPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
-                        {subcatLabel}
+                        {skillLabel(exchange.skill)}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        {isReceived ? 'De' : 'À'}{' '}
-                        <span className="font-medium text-gray-700">
-                          {other.first_name}
-                        </span>
+                        {isRequester ? 'À' : 'De'}{' '}
+                        <span className="font-medium text-gray-700">{other.first_name}</span>
                         {' · '}{other.city}
                         {exchange.duration_minutes && (
-                          <span className="ml-1 text-gray-400">
-                            · ⏱ {formatDuration(exchange.duration_minutes)}
-                          </span>
+                          <span className="ml-1 text-gray-400">· ⏱ {formatDuration(exchange.duration_minutes)}</span>
                         )}
                       </p>
                     </div>
@@ -185,15 +246,24 @@ export default function ExchangesPage() {
                     </p>
                   )}
 
-                  {/* Crédits si réalisé */}
+                  {/* Crédits transférés */}
                   {exchange.status === ExchangeStatus.Completed && exchange.credits_transferred && (
                     <p className="text-xs text-emerald-600 font-medium mb-3">
-                      ✓ {exchange.credits_transferred} crédits transférés
+                      ✓ 1 service transféré
                     </p>
                   )}
 
-                  {/* Actions */}
-                  {exchange.status === ExchangeStatus.Pending && isReceived && (
+                  {/* Appréciation envoyée cette session */}
+                  {appreciationDone.has(exchange.id) && (
+                    <p className="text-xs text-emerald-600 font-medium pt-2 border-t border-gray-100">
+                      ✓ Appréciation envoyée à {other.first_name}
+                    </p>
+                  )}
+
+                  {/* ── Actions ── */}
+
+                  {/* Pending — provider : accepter / décliner */}
+                  {exchange.status === ExchangeStatus.Pending && !isRequester && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
@@ -212,7 +282,30 @@ export default function ExchangesPage() {
                     </div>
                   )}
 
-                  {exchange.status === ExchangeStatus.Confirmed && (
+                  {/* Pending — requester : annuler */}
+                  {exchange.status === ExchangeStatus.Pending && isRequester && (
+                    <button
+                      onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
+                      disabled={isUpdating}
+                      className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                    >
+                      Annuler la demande
+                    </button>
+                  )}
+
+                  {/* Confirmed — provider : annuler uniquement */}
+                  {exchange.status === ExchangeStatus.Confirmed && !isRequester && (
+                    <button
+                      onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
+                      disabled={isUpdating}
+                      className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                    >
+                      Annuler
+                    </button>
+                  )}
+
+                  {/* Confirmed — requester : formulaire combiné réalisé + appréciation */}
+                  {exchange.status === ExchangeStatus.Confirmed && isRequester && !isCompletionOpen && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
@@ -222,23 +315,104 @@ export default function ExchangesPage() {
                         Annuler
                       </button>
                       <button
-                        onClick={() => handleStatus(exchange.id, ExchangeStatus.Completed)}
-                        disabled={isUpdating}
-                        className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
+                        onClick={() => setCompletionOpen(prev => new Set([...prev, exchange.id]))}
+                        className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700"
                       >
-                        {isUpdating ? '...' : 'Marquer réalisé'}
+                        Marquer réalisé
                       </button>
                     </div>
                   )}
 
-                  {exchange.status === ExchangeStatus.Pending && !isReceived && (
+                  {exchange.status === ExchangeStatus.Confirmed && isRequester && isCompletionOpen && (
+                    <div className="border-t border-gray-100 pt-3 space-y-3">
+                      <p className="text-xs font-medium text-gray-700">
+                        Comment était {other.first_name} ? <span className="text-gray-400 font-normal">(facultatif)</span>
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {ADJECTIVES.map(adj => {
+                          const active = adjectives.includes(adj.id)
+                          return (
+                            <button
+                              key={adj.id}
+                              onClick={() => toggleAdjective(exchange.id, adj.id)}
+                              className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
+                                active
+                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                              }`}
+                            >
+                              {adj.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setCompletionOpen(prev => { const s = new Set(prev); s.delete(exchange.id); return s })}
+                          className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50"
+                        >
+                          Retour
+                        </button>
+                        <button
+                          onClick={() => handleCompleteWithAppreciation(exchange)}
+                          disabled={isUpdating}
+                          className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
+                        >
+                          {isUpdating ? '...' : 'Confirmer la réalisation'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Completed — appréciation rétroactive (échange déjà réalisé au chargement) */}
+                  {canAppreciateRetro && !isAppreciationOpen && !appreciationDone.has(exchange.id) && (
                     <button
-                      onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
-                      disabled={isUpdating}
-                      className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                      onClick={() => setAppreciationOpen(prev => new Set([...prev, exchange.id]))}
+                      className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
                     >
-                      Annuler la demande
+                      Laisser une appréciation à {other.first_name}
                     </button>
+                  )}
+
+                  {canAppreciateRetro && isAppreciationOpen && (
+                    <div className="border-t border-gray-100 pt-3 space-y-3">
+                      <p className="text-xs font-medium text-gray-600">
+                        Comment était {other.first_name} ?
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {ADJECTIVES.map(adj => {
+                          const active = adjectives.includes(adj.id)
+                          return (
+                            <button
+                              key={adj.id}
+                              onClick={() => toggleAdjective(exchange.id, adj.id)}
+                              className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
+                                active
+                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                              }`}
+                            >
+                              {adj.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setAppreciationOpen(prev => { const s = new Set(prev); s.delete(exchange.id); return s })}
+                          className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50"
+                        >
+                          Passer
+                        </button>
+                        <button
+                          onClick={() => handleAppreciation(exchange)}
+                          disabled={adjectives.length === 0 || isUpdating}
+                          className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
+                        >
+                          {isUpdating ? '...' : 'Envoyer'}
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )

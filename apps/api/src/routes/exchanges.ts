@@ -54,6 +54,43 @@ export default async function exchangesRoutes(app: FastifyInstance) {
     return reply.send(data)
   })
 
+  // POST /api/exchanges/:id/appreciation
+  app.post('/exchanges/:id/appreciation', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { adjectives } = req.body as { adjectives: string[] }
+
+    if (!adjectives?.length) return reply.send({ ok: true })
+
+    const { data: exchange } = await supabase
+      .from('exchange')
+      .select('status, requester_id, provider_id')
+      .eq('id', id)
+      .single()
+
+    if (!exchange) return reply.status(404).send({ error: 'Exchange not found' })
+    if (exchange.status !== 'completed') {
+      return reply.status(400).send({ error: 'Exchange must be completed to leave an appreciation' })
+    }
+
+    // Le requester apprécie le provider
+    const giver_id = exchange.requester_id
+    const receiver_id = exchange.provider_id
+
+    const rows = adjectives.map(adjective => ({
+      exchange_id: id,
+      giver_id,
+      receiver_id,
+      adjective,
+    }))
+
+    const { error } = await supabase
+      .from('appreciation')
+      .upsert(rows, { onConflict: 'exchange_id,giver_id,adjective' })
+
+    if (error) return reply.status(500).send({ error: error.message })
+    return reply.send({ ok: true })
+  })
+
   // POST /api/exchanges/:id/status
   app.post('/exchanges/:id/status', async (req, reply) => {
     const { id } = req.params as { id: string }

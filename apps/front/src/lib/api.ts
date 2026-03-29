@@ -1,4 +1,5 @@
 import { ExchangeStatus } from '@/lib/types'
+import type { AdjectiveId } from '@/constants/adjectives'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!
 
@@ -11,10 +12,12 @@ export async function fetchOrganization(id: string) {
 export async function fetchSkills(params?: {
   category?: string
   subcategory?: string
+  match_resident_id?: string
 }) {
   const query = new URLSearchParams()
-  if (params?.category)    query.set('category', params.category)
-  if (params?.subcategory) query.set('subcategory', params.subcategory)
+  if (params?.category)          query.set('category', params.category)
+  if (params?.subcategory)       query.set('subcategory', params.subcategory)
+  if (params?.match_resident_id) query.set('match_resident_id', params.match_resident_id)
 
   const res = await fetch(`${API_URL}/skills?${query}`)
   if (!res.ok) throw new Error('Failed to fetch skills')
@@ -30,6 +33,8 @@ export async function fetchSkillById(id: string) {
 export async function createResident(body: {
   first_name: string
   organization_id: string
+  email?: string | null
+  email_digest?: boolean
   lat?: number | null
   lng?: number | null
   address?: string | null
@@ -92,6 +97,25 @@ export async function saveResidentSkills(
   return res.json()
 }
 
+export async function fetchResidentInterests(id: string) {
+  const res = await fetch(`${API_URL}/residents/${id}/interests`)
+  if (!res.ok) throw new Error('Failed to fetch interests')
+  return res.json()
+}
+
+export async function saveResidentInterests(
+  residentId: string,
+  interests: Array<{ category: string; subcategory?: string | null }>
+) {
+  const res = await fetch(`${API_URL}/residents/${residentId}/interests`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(interests),
+  })
+  if (!res.ok) throw new Error('Failed to save interests')
+  return res.json()
+}
+
 export async function createExchange(payload: {
   skill_id: string
   requester_id: string
@@ -123,5 +147,15 @@ export async function updateExchangeStatus(
     body: JSON.stringify({ status }),
   })
   if (!res.ok) throw new Error('Failed to update exchange')
+  return res.json()
+}
+
+export async function createAppreciation(exchangeId: string, adjectives: AdjectiveId[]) {
+  const res = await fetch(`${API_URL}/exchanges/${exchangeId}/appreciation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adjectives }),
+  })
+  if (!res.ok) throw new Error('Failed to create appreciation')
   return res.json()
 }

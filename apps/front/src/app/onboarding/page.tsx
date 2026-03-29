@@ -2,8 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CATEGORIES, CategoryId, SubcatId } from '@/constants/categories'
-import { saveResidentSkills, createResident } from '@/lib/api'
+import { CATEGORIES, CategoryId, SubcatId, AUTRE_SUBCAT_ID } from '@/constants/categories'
+import { saveResidentSkills, createResident, saveResidentInterests } from '@/lib/api'
 import { useCurrentUser } from '@/context/CurrentUser'
 
 // ─── Questions swipe ──────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ const QUESTIONS: Record<CategoryId, string> = {
 const AVAILABILITY_CHIPS = ['Le matin', 'L\'après-midi', 'Le soir', 'En semaine', 'Le weekend']
 
 type Category = (typeof CATEGORIES)[number]
-type Phase = 'identity' | 'swipe' | 'subcats' | 'details' | 'recap'
+type Phase = 'identity' | 'swipe' | 'subcats' | 'details' | 'interests' | 'recap'
 
 // ─── AddressSearch ────────────────────────────────────────────────────────────
 
@@ -98,15 +98,17 @@ function AddressSearch({
 // ─── IdentityStep ─────────────────────────────────────────────────────────────
 
 function IdentityStep({
-  firstName, setFirstName, city, onAddressSelect, onNext,
+  firstName, setFirstName, email, setEmail, city, onAddressSelect, onNext,
 }: {
   firstName: string
   setFirstName: (v: string) => void
+  email: string
+  setEmail: (v: string) => void
   city: string
   onAddressSelect: (address: string, lat: number, lng: number, city: string) => void
   onNext: () => void
 }) {
-  const canContinue = firstName.trim().length > 0 && city.length > 0
+  const canContinue = firstName.trim().length > 0 && city.length > 0 && email.trim().length > 0
 
   return (
     <div className="flex flex-col px-4 py-8 gap-6 max-w-sm mx-auto">
@@ -139,6 +141,20 @@ function IdentityStep({
           {city && (
             <p className="text-xs text-emerald-600 mt-1.5">📍 {city}</p>
           )}
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1.5">
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Ex : marie@exemple.fr"
+            className="w-full border border-gray-200 rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-emerald-400"
+          />
+          <p className="text-xs text-gray-400 mt-1.5">Pour recevoir les mises en relation et les nouveautés.</p>
         </div>
       </div>
 
@@ -201,13 +217,20 @@ function SwipeCard({
 // ─── SubcatsScreen ────────────────────────────────────────────────────────────
 
 function SubcatsScreen({
-  category, selected, onToggle, onDone,
+  category, selected, onToggle, autreComment, onAutreComment, autreDescription, onAutreDescription, onDone,
 }: {
   category: Category
   selected: SubcatId[]
   onToggle: (s: SubcatId) => void
+  autreComment: string
+  onAutreComment: (v: string) => void
+  autreDescription: string
+  onAutreDescription: (v: string) => void
   onDone: () => void
 }) {
+  const autreSelected = selected.includes(AUTRE_SUBCAT_ID)
+  const regularSubcats = category.subcategories.filter(s => s.id !== AUTRE_SUBCAT_ID)
+
   return (
     <div className="flex flex-col px-4 py-8 gap-6 max-w-sm mx-auto">
       <div className="flex items-center gap-3">
@@ -217,8 +240,9 @@ function SubcatsScreen({
           <p className="text-sm text-gray-500">Qu&apos;est-ce que tu peux faire ?</p>
         </div>
       </div>
+
       <div className="flex flex-wrap gap-2">
-        {category.subcategories.map(sub => {
+        {regularSubcats.map(sub => {
           const active = selected.includes(sub.id as SubcatId)
           return (
             <button
@@ -235,9 +259,43 @@ function SubcatsScreen({
           )
         })}
       </div>
+
+      {/* Autre — section séparée */}
+      <div className="border-t border-gray-100 pt-4 space-y-3">
+        <button
+          onClick={() => onToggle(AUTRE_SUBCAT_ID)}
+          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+            autreSelected
+              ? 'bg-emerald-500 border-emerald-500 text-white'
+              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          Autre
+        </button>
+        {autreSelected && (
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={autreComment}
+              onChange={e => onAutreComment(e.target.value)}
+              placeholder="Ce que tu proposes (ex : Fabrication de savons) *"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400 bg-emerald-50"
+              autoFocus
+            />
+            <input
+              type="text"
+              value={autreDescription}
+              onChange={e => onAutreDescription(e.target.value)}
+              placeholder="Description supplémentaire (facultatif)"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+            />
+          </div>
+        )}
+      </div>
+
       <button
         onClick={onDone}
-        disabled={selected.length === 0}
+        disabled={selected.length === 0 || (autreSelected && autreComment.trim().length === 0)}
         className="mt-2 py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm disabled:opacity-40 hover:bg-emerald-600 transition-all"
       >
         Continuer →
@@ -277,9 +335,13 @@ function DetailsStep({
       </div>
 
       {categories.map(cat => {
+        // "Autre" est déjà décrit dans la phase précédente, on ne le réaffiche pas ici
         const subcats = (selectedSubcats[cat.id] ?? [])
+          .filter(id => id !== AUTRE_SUBCAT_ID)
           .map(id => cat.subcategories.find(s => s.id === id))
           .filter(Boolean) as typeof cat.subcategories[number][]
+
+        if (!subcats.length) return null
 
         return (
           <div key={cat.id}>
@@ -293,7 +355,7 @@ function DetailsStep({
                     type="text"
                     value={comments[`${cat.id}:${sub.id}`] ?? ''}
                     onChange={e => setComment(`${cat.id}:${sub.id}`, e.target.value)}
-                    placeholder={`Details pour ${sub.label} (facultatif)`}
+                    placeholder={`Détails pour ${sub.label} (facultatif)`}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
                   />
                 </div>
@@ -344,7 +406,94 @@ function DetailsStep({
         onClick={onNext}
         className="py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-all"
       >
-        Voir le récap →
+        Continuer →
+      </button>
+    </div>
+  )
+}
+
+// ─── InterestsStep ────────────────────────────────────────────────────────────
+
+function InterestsStep({
+  selectedCats, onToggleCat, selectedSubcats, onToggleSubcat, onNext,
+}: {
+  selectedCats: CategoryId[]
+  onToggleCat: (id: CategoryId) => void
+  selectedSubcats: Partial<Record<CategoryId, string[]>>
+  onToggleSubcat: (catId: CategoryId, subcatId: string) => void
+  onNext: () => void
+}) {
+  return (
+    <div className="flex flex-col px-4 py-8 gap-6 max-w-sm mx-auto">
+      <div>
+        <h2 className="text-xl font-bold text-gray-800">Qu&apos;est-ce que tu aimerais apprendre ?</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          On te préviendra quand un voisin propose quelque chose qui t&apos;intéresse.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {CATEGORIES.map(cat => {
+          const active = selectedCats.includes(cat.id)
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onToggleCat(cat.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                active
+                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span>{cat.emoji}</span>
+              <span>{cat.label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {selectedCats.length > 0 && (
+        <div className="space-y-4">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            Affine tes intérêts (facultatif)
+          </p>
+          {selectedCats.map(catId => {
+            const cat = CATEGORIES.find(c => c.id === catId)!
+            // Pas de chip "Autre" sur les intérêts
+            const subcats = cat.subcategories.filter(s => s.id !== AUTRE_SUBCAT_ID)
+            const activeSubs = selectedSubcats[catId] ?? []
+            return (
+              <div key={catId}>
+                <p className="text-xs font-medium text-gray-500 mb-2">{cat.emoji} {cat.label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {subcats.map(sub => {
+                    const active = activeSubs.includes(sub.id)
+                    return (
+                      <button
+                        key={sub.id}
+                        onClick={() => onToggleSubcat(catId, sub.id)}
+                        className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
+                          active
+                            ? 'bg-emerald-500 border-emerald-500 text-white'
+                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        {sub.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <button
+        onClick={onNext}
+        className="py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-all"
+      >
+        {selectedCats.length === 0 ? 'Passer →' : 'Continuer →'}
       </button>
     </div>
   )
@@ -353,7 +502,8 @@ function DetailsStep({
 // ─── RecapScreen ──────────────────────────────────────────────────────────────
 
 function RecapScreen({
-  firstName, city, accepted, selectedSubcats, comments, availability, saving, onSave,
+  firstName, city, accepted, selectedSubcats, comments, availability,
+  emailDigest, setEmailDigest, saving, onSave,
 }: {
   firstName: string
   city: string
@@ -361,6 +511,8 @@ function RecapScreen({
   selectedSubcats: Partial<Record<CategoryId, SubcatId[]>>
   comments: Partial<Record<string, string>>
   availability: string
+  emailDigest: boolean
+  setEmailDigest: (v: boolean) => void
   saving: boolean
   onSave: () => void
 }) {
@@ -395,8 +547,10 @@ function RecapScreen({
               </div>
               <div className="space-y-1">
                 {(selectedSubcats[cat.id] ?? []).map(subcatId => {
-                  const label = cat.subcategories.find(s => s.id === subcatId)?.label ?? subcatId
-                  const comment = comments[`${cat.id}:${subcatId}`]
+                  const label = subcatId === AUTRE_SUBCAT_ID
+                    ? comments[`${cat.id}:${AUTRE_SUBCAT_ID}`] ?? 'Autre'
+                    : (cat.subcategories.find(s => s.id === subcatId)?.label ?? subcatId)
+                  const comment = subcatId !== AUTRE_SUBCAT_ID ? comments[`${cat.id}:${subcatId}`] : undefined
                   return (
                     <div key={subcatId}>
                       <span className="text-xs bg-white/80 border border-white rounded-full px-2.5 py-0.5 text-gray-700">{label}</span>
@@ -409,6 +563,18 @@ function RecapScreen({
           ))}
         </div>
       )}
+
+      <label className="flex items-start gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={emailDigest}
+          onChange={e => setEmailDigest(e.target.checked)}
+          className="mt-0.5 w-4 h-4 accent-emerald-500 cursor-pointer"
+        />
+        <span className="text-sm text-gray-600">
+          Recevoir les nouveautés de mes voisins par mail chaque semaine
+        </span>
+      </label>
 
       <button
         onClick={onSave}
@@ -429,6 +595,7 @@ export default function OnboardingPage() {
 
   // Identity
   const [firstName, setFirstName] = useState('')
+  const [email, setEmail] = useState('')
   const [address, setAddress] = useState('')
   const [addressLat, setAddressLat] = useState<number | null>(null)
   const [addressLng, setAddressLng] = useState<number | null>(null)
@@ -445,6 +612,12 @@ export default function OnboardingPage() {
   const [comments, setComments] = useState<Partial<Record<string, string>>>({})
   const [availability, setAvailability] = useState('')
 
+  // Interests
+  const [interestCats, setInterestCats] = useState<CategoryId[]>([])
+  const [interestSubcats, setInterestSubcats] = useState<Partial<Record<CategoryId, string[]>>>({})
+
+  // Recap
+  const [emailDigest, setEmailDigest] = useState(true)
   const [saving, setSaving] = useState(false)
 
   const category = CATEGORIES[swipeIndex]
@@ -481,19 +654,66 @@ export default function OnboardingPage() {
     })
   }
 
+  function toggleInterestCat(catId: CategoryId) {
+    setInterestCats(prev =>
+      prev.includes(catId) ? prev.filter(c => c !== catId) : [...prev, catId]
+    )
+    // Retire les sous-catégories si on désélectionne la catégorie
+    setInterestSubcats(prev => {
+      const next = { ...prev }
+      if (interestCats.includes(catId)) delete next[catId]
+      return next
+    })
+  }
+
+  function toggleInterestSubcat(catId: CategoryId, subcatId: string) {
+    setInterestSubcats(prev => {
+      const current = prev[catId] ?? []
+      return {
+        ...prev,
+        [catId]: current.includes(subcatId)
+          ? current.filter(s => s !== subcatId)
+          : [...current, subcatId],
+      }
+    })
+  }
+
   async function handleSave() {
     setSaving(true)
     const skills = accepted.flatMap(catId =>
-      (selectedSubcats[catId] ?? []).map(subcatId => ({
-        category: catId,
-        subcategory: subcatId,
-        comment: comments[`${catId}:${subcatId}`] ?? null,
-      }))
+      (selectedSubcats[catId] ?? []).map(subcatId => {
+        if (subcatId === AUTRE_SUBCAT_ID) {
+          const title = comments[`${catId}:${AUTRE_SUBCAT_ID}`] ?? ''
+          const desc = comments[`${catId}:${AUTRE_SUBCAT_ID}:desc`] ?? ''
+          return {
+            category: catId,
+            subcategory: subcatId,
+            comment: desc ? `${title}\n${desc}` : title,
+          }
+        }
+        return {
+          category: catId,
+          subcategory: subcatId,
+          comment: comments[`${catId}:${subcatId}`] ?? null,
+        }
+      })
     )
+
+    // Intérêts : si subcats sélectionnées → une ligne par subcat, sinon une ligne par catégorie
+    const interests = interestCats.flatMap(catId => {
+      const subs = interestSubcats[catId] ?? []
+      if (subs.length > 0) {
+        return subs.map(subcatId => ({ category: catId, subcategory: subcatId }))
+      }
+      return [{ category: catId, subcategory: null }]
+    })
+
     try {
       const newResident = await createResident({
         first_name: firstName,
         organization_id: process.env.NEXT_PUBLIC_ORGANIZATION_ID!,
+        email: email || null,
+        email_digest: emailDigest,
         lat: addressLat,
         lng: addressLng,
         address,
@@ -501,6 +721,9 @@ export default function OnboardingPage() {
         availability: availability || null,
       })
       await saveResidentSkills(newResident.id, skills)
+      if (interests.length > 0) {
+        await saveResidentInterests(newResident.id, interests)
+      }
       setUser(newResident)
       router.push('/')
     } catch {
@@ -514,6 +737,8 @@ export default function OnboardingPage() {
         <IdentityStep
           firstName={firstName}
           setFirstName={setFirstName}
+          email={email}
+          setEmail={setEmail}
           city={city}
           onAddressSelect={(addr, lat, lng, c) => {
             setAddress(addr)
@@ -534,6 +759,10 @@ export default function OnboardingPage() {
           category={category}
           selected={selectedSubcats[category.id] ?? []}
           onToggle={s => toggleSubcat(category.id, s)}
+          autreComment={comments[`${category.id}:${AUTRE_SUBCAT_ID}`] ?? ''}
+          onAutreComment={v => setComments(prev => ({ ...prev, [`${category.id}:${AUTRE_SUBCAT_ID}`]: v }))}
+          autreDescription={comments[`${category.id}:${AUTRE_SUBCAT_ID}:desc`] ?? ''}
+          onAutreDescription={v => setComments(prev => ({ ...prev, [`${category.id}:${AUTRE_SUBCAT_ID}:desc`]: v }))}
           onDone={goToNextSwipe}
         />
       </main>
@@ -550,6 +779,20 @@ export default function OnboardingPage() {
           setComment={(key, val) => setComments(prev => ({ ...prev, [key]: val }))}
           availability={availability}
           setAvailability={setAvailability}
+          onNext={() => setPhase('interests')}
+        />
+      </main>
+    )
+  }
+
+  if (phase === 'interests') {
+    return (
+      <main className="min-h-screen overflow-y-auto">
+        <InterestsStep
+          selectedCats={interestCats}
+          onToggleCat={toggleInterestCat}
+          selectedSubcats={interestSubcats}
+          onToggleSubcat={toggleInterestSubcat}
           onNext={() => setPhase('recap')}
         />
       </main>
@@ -566,6 +809,8 @@ export default function OnboardingPage() {
           selectedSubcats={selectedSubcats}
           comments={comments}
           availability={availability}
+          emailDigest={emailDigest}
+          setEmailDigest={setEmailDigest}
           saving={saving}
           onSave={handleSave}
         />

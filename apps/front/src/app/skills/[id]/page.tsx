@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { fetchSkillById, createExchange } from '@/lib/api'
+import { fetchSkillById, fetchResident, createExchange } from '@/lib/api'
 import { CATEGORIES } from '@/constants/categories'
+import { ADJECTIVES } from '@/constants/adjectives'
 import { useCurrentUser } from '@/context/CurrentUser'
 import { useOrgConfig } from '@/context/OrgConfig'
-import type { Skill } from '@/lib/types'
+import type { Skill, Resident } from '@/lib/types'
 import { CreditPolicy } from '@/lib/types'
 import ResidentCard from '@/components/ResidentCard'
 
@@ -19,6 +20,7 @@ export default function SkillPage() {
   const org = useOrgConfig()
 
   const [skill, setSkill] = useState<Skill | null>(null)
+  const [residentFull, setResidentFull] = useState<Resident | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [contactStep, setContactStep] = useState<ContactStep>('idle')
   const [message, setMessage] = useState('')
@@ -26,7 +28,11 @@ export default function SkillPage() {
 
   useEffect(() => {
     fetchSkillById(id)
-      .then(setSkill)
+      .then(s => {
+        setSkill(s)
+        return fetchResident(s.resident_id)
+      })
+      .then(setResidentFull)
       .catch(() => router.push('/'))
       .finally(() => setIsLoading(false))
   }, [id, router])
@@ -118,6 +124,18 @@ export default function SkillPage() {
           )}
           {resident?.bio && (
             <p className="text-sm text-gray-500 mt-3 leading-relaxed">{resident.bio}</p>
+          )}
+          {residentFull?.appreciations && residentFull.appreciations.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {residentFull.appreciations.map(adjId => {
+                const adj = ADJECTIVES.find(a => a.id === adjId)
+                return adj ? (
+                  <span key={adjId} className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                    {adj.label}
+                  </span>
+                ) : null
+              })}
+            </div>
           )}
         </div>
 

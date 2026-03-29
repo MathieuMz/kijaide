@@ -6,14 +6,17 @@ import { useCurrentUser } from '@/context/CurrentUser'
 import type { Resident } from '@/lib/types'
 import InfosTab from './InfosTab'
 import CompetencesTab from './CompetencesTab'
+import InterestsTab from './InterestsTab'
 
 enum Tab {
   Competences = 'competences',
+  Interests   = 'interests',
   Infos       = 'infos',
 }
 
 const TAB_LABEL: Record<Tab, string> = {
   [Tab.Competences]: 'Mes compétences',
+  [Tab.Interests]:   'Mes intérêts',
   [Tab.Infos]:       'Mes infos',
 }
 
@@ -32,7 +35,7 @@ function ProfilePage({ user, setUser }: { user: Resident; setUser: (u: Resident 
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
-          {([Tab.Competences, Tab.Infos]).map(t => (
+          {([Tab.Competences, Tab.Interests, Tab.Infos]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -46,10 +49,10 @@ function ProfilePage({ user, setUser }: { user: Resident; setUser: (u: Resident 
             </button>
           ))}
         </div>
-        {tab === Tab.Infos
-          ? <InfosTab user={user} setUser={setUser} />
-          : <CompetencesTab user={user} />
-        }
+
+        {tab === Tab.Infos        && <InfosTab user={user} setUser={setUser} />}
+        {tab === Tab.Competences  && <CompetencesTab user={user} />}
+        {tab === Tab.Interests    && <InterestsTab user={user} />}
       </div>
     </main>
   )

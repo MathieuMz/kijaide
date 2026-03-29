@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/Mathieu/ws/kijaide/apps/api/src -not -path */node_modules/*)"
+    ]
+  }
+}

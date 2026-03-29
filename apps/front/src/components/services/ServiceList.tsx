@@ -7,9 +7,10 @@ interface Props {
   isPending: boolean
   userLat?: number | null
   userLng?: number | null
+  highlighted?: boolean
 }
 
-export default function ServiceList({ services, isPending, userLat, userLng }: Props) {
+export default function ServiceList({ services, isPending, userLat, userLng, highlighted = false }: Props) {
   if (isPending) {
     return (
       <div className="space-y-3">
@@ -44,9 +45,9 @@ export default function ServiceList({ services, isPending, userLat, userLng }: P
     : services
 
   return (
-    <div className="space-y-3">
-{sorted.map((service) => (
-        <ServiceCard key={service.id} service={service} userLat={userLat} userLng={userLng} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {sorted.map((service) => (
+        <ServiceCard key={service.id} service={service} userLat={userLat} userLng={userLng} highlighted={highlighted} />
       ))}
     </div>
   )
