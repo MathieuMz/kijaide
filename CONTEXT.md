@@ -151,7 +151,7 @@ GET  /api/organizations/:id              → config org (credit_policy, starting
 
 GET  /api/skills                         → liste (filtres: category, subcategory) avec resident embedé
 GET  /api/skills?match_resident_id=:id   → skills qui matchent les intérêts d'un résident
-GET  /api/skills/:id                     → détail avec resident (id, first_name, credit_balance, bio, availability, city, lat, lng)
+GET  /api/skills/:id                     → détail avec resident embedé (id, first_name, credit_balance, bio, availability, city, lat, lng) + appreciations du resident (seuil APPRECIATION_DISPLAY_THRESHOLD)
 
 GET  /api/residents                      → liste avec skills count + address
 GET  /api/residents/:id                  → profil complet + services_given + services_received + appreciations (seuil APPRECIATION_DISPLAY_THRESHOLD)
@@ -176,7 +176,7 @@ POST /api/exchanges/:id/appreciation     → { adjectives: string[] } — après
 /                     → home feed (redirect /login si non connecté)
 /login                → faux login démo : liste tous les résidents de la BDD, clic = connexion instantanée + bouton "Nouvel utilisateur" → /onboarding
 /onboarding           → création de compte (flow swipe complet)
-/profile              → mon profil tabbé : "Mes compétences" (défaut) + "Mes intérêts" + "Mes infos"
+/profile              → mon profil tabbé : "Mes compétences" (défaut) + "Mes intérêts" + "Mes infos" — onglet initial via `?tab=` (competences | interests | infos)
 /skills/[id]          → fiche compétence d'un autre résident + mise en relation + appréciations du provider
 /exchanges            → mes échanges en cours (reçus / envoyés)
 ```
@@ -187,10 +187,15 @@ POST /api/exchanges/:id/appreciation     → { adjectives: string[] } — après
 
 Layout responsive (desktop-first) :
 - Header sticky, `max-w-6xl`, nom de l'org en badge
-- Bandeau vert : compteur "X voisins proposent leur aide" + CTA "Proposer mes compétences" (sm+)
+- Bandeau vert : compteur "X voisins proposent leur aide" + 2 boutons (sm+) : "Mes compétences" → `/profile?tab=competences`, "Mes intérêts" → `/profile?tab=interests`
 - Si l'user a des intérêts déclarés et des matches → section "Voisins qui peuvent vous apprendre" en premier, cards highlightées (bordure verte + badge "✦ Correspond à tes intérêts"), exclues du catalogue principal
-- Catalogue complet de skills trié par distance croissante, grille 2 colonnes sur md+
+- Catalogue complet de skills filtré en mémoire (pas de re-fetch API), grille 2 colonnes sur md+
 - Filtres catégories : toujours visibles sur desktop (md+), derrière bouton "Filtrer" sur mobile
+
+### Performance
+- 3 appels parallèles au chargement : `fetchResidents`, `fetchSkills`, `fetchSkills({ match_resident_id })`
+- ServiceExplorer filtre en mémoire depuis `initialSkills` — aucun appel API sur changement de filtre
+- `GET /api/skills/:id` embed les appréciations directement → une seule requête sur la fiche compétence
 
 ---
 
