@@ -57,8 +57,8 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
             onClick={() => handleSubcategoryChange(null)}
             className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm border transition-colors ${
               !activeSubcategory
-                ? 'bg-emerald-600 border-emerald-600 text-white'
-                : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                ? 'bg-brand-600 border-brand-600 text-white'
+                : 'border-slate-300 text-slate-600 hover:border-slate-500'
             }`}
           >
             Tous
@@ -69,8 +69,8 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
               onClick={() => handleSubcategoryChange(sub.id)}
               className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm border transition-colors ${
                 activeSubcategory === sub.id
-                  ? 'bg-emerald-600 border-emerald-600 text-white'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                  ? 'bg-brand-600 border-brand-600 text-white'
+                  : 'border-slate-300 text-slate-600 hover:border-slate-500'
               }`}
             >
               {sub.label}
@@ -84,7 +84,7 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-gray-800">
+        <h2 className="text-base font-bold text-slate-800">
           {activeCategory
             ? `Services proposés · ${selectedCategory?.label}`
             : 'Services proposés'}
@@ -94,13 +94,13 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
           onClick={handleToggleMobileFilters}
           className={`md:hidden flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
             showFiltersMobile
-              ? 'bg-emerald-500 border-emerald-500 text-white'
-              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+              ? 'bg-brand-500 border-brand-500 text-white'
+              : 'border-slate-300 text-slate-600 hover:border-slate-400'
           }`}
         >
           <span>Filtrer</span>
           {activeCategory && !showFiltersMobile && (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
           )}
         </button>
       </div>

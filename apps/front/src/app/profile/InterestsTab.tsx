@@ -77,13 +77,13 @@ export default function InterestsTab({ user }: { user: Resident }) {
     }
   }
 
-  if (isLoading) return <p className="text-sm text-gray-400">Chargement...</p>
+  if (isLoading) return <p className="text-sm text-slate-500">Chargement...</p>
 
   const selectedCats = Object.keys(interests) as CategoryId[]
 
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-4">
+      <p className="text-xs text-slate-500 mb-4">
         Sélectionne ce que tu aimerais apprendre ou recevoir. Tu seras notifié quand un voisin propose quelque chose qui t&apos;intéresse.
       </p>
 
@@ -95,10 +95,10 @@ export default function InterestsTab({ user }: { user: Resident }) {
             <button
               key={cat.id}
               onClick={() => toggleCat(cat.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-all ${
                 active
-                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                  ? 'bg-brand-500 border-brand-500 text-white'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-400'
               }`}
             >
               <span>{cat.emoji}</span>
@@ -111,7 +111,7 @@ export default function InterestsTab({ user }: { user: Resident }) {
       {/* Affinement par sous-catégorie */}
       {selectedCats.length > 0 && (
         <div className="space-y-5 mb-6">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
             Affine tes intérêts (facultatif)
           </p>
           {selectedCats.map(catId => {
@@ -120,7 +120,7 @@ export default function InterestsTab({ user }: { user: Resident }) {
             const activeSubs = interests[catId] ?? []
             return (
               <div key={catId}>
-                <p className="text-xs font-medium text-gray-500 mb-2">{cat.emoji} {cat.label}</p>
+                <p className="text-xs font-semibold text-slate-600 mb-2">{cat.emoji} {cat.label}</p>
                 <div className="flex flex-wrap gap-2">
                   {subcats.map(sub => {
                     const active = activeSubs.includes(sub.id)
@@ -130,8 +130,8 @@ export default function InterestsTab({ user }: { user: Resident }) {
                         onClick={() => toggleSubcat(catId, sub.id)}
                         className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
                           active
-                            ? 'bg-emerald-500 border-emerald-500 text-white'
-                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                            ? 'bg-brand-500 border-brand-500 text-white'
+                            : 'bg-white border-slate-300 text-slate-600 hover:border-slate-400'
                         }`}
                       >
                         {sub.label}
@@ -148,7 +148,7 @@ export default function InterestsTab({ user }: { user: Resident }) {
       <button
         onClick={handleSave}
         disabled={isSaving || !isDirty}
-        className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm disabled:opacity-40 hover:bg-emerald-600 transition-all"
+        className="w-full py-3 rounded-xl bg-brand-500 text-white font-bold text-sm disabled:opacity-40 hover:bg-brand-600 transition-all"
       >
         {isSaving ? 'Enregistrement...' : saved && !isDirty ? '✓ Enregistré' : 'Enregistrer'}
       </button>

@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  /* Typographie — sans-serif chaleureuse et humaniste */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Couleur de marque — bleu marine profond, plus dense/sobre qu'un bleu vif */
+  --color-brand-50: #eef2fb;
+  --color-brand-100: #dce3f5;
+  --color-brand-200: #b3c2e8;
+  --color-brand-300: #8aa0da;
+  --color-brand-400: #5c78c4;
+  --color-brand-500: #3d5aac;
+  --color-brand-600: #2c4490;
+  --color-brand-700: #233672;
+  --color-brand-800: #1c2b5a;
+  --color-brand-900: #182448;
+  --color-brand-950: #0e152c;
+}

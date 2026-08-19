@@ -17,7 +17,7 @@ export default function ServiceList({ services, isPending, userLat, userLng, hig
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-28 rounded-xl bg-gray-100 animate-pulse"
+            className="h-28 rounded-xl bg-slate-200 animate-pulse"
           />
         ))}
       </div>
@@ -26,7 +26,7 @@ export default function ServiceList({ services, isPending, userLat, userLng, hig
 
   if (!services.length) {
     return (
-      <div className="text-center py-12 text-gray-400 text-sm">
+      <div className="text-center py-12 text-slate-500 text-sm">
         Aucune proposition de service dans cette catégorie pour le moment.
       </div>
     )

@@ -36,9 +36,9 @@ const STATUS_LABEL: Record<ExchangeStatus, string> = {
 
 const STATUS_COLOR: Record<ExchangeStatus, string> = {
   [ExchangeStatus.Pending]:   'bg-amber-50 text-amber-700',
-  [ExchangeStatus.Confirmed]: 'bg-blue-50 text-blue-700',
+  [ExchangeStatus.Confirmed]: 'bg-violet-50 text-violet-700',
   [ExchangeStatus.Completed]: 'bg-emerald-50 text-emerald-700',
-  [ExchangeStatus.Cancelled]: 'bg-gray-100 text-gray-500',
+  [ExchangeStatus.Cancelled]: 'bg-slate-200 text-slate-600',
 }
 
 
@@ -151,28 +151,28 @@ export default function ExchangesPage() {
   const displayed = activeTab === Tab.Received ? received : sent
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3">
+    <main className="min-h-screen bg-slate-100">
+      <header className="bg-white border-b border-slate-300 px-4 py-4 flex items-center gap-3">
         <button
           onClick={() => router.push('/')}
-          className="text-gray-400 hover:text-gray-600 text-sm"
+          className="text-slate-500 hover:text-slate-600 text-sm"
         >
           ← Retour
         </button>
-        <h1 className="text-base font-medium text-gray-900">Mes échanges</h1>
+        <h1 className="text-base font-semibold text-slate-900">Mes échanges</h1>
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
 
-        <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
+        <div className="flex rounded-xl border border-slate-300 overflow-hidden mb-5">
           {([Tab.Received, Tab.Sent]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2.5 text-sm font-medium transition-colors relative ${
+              className={`flex-1 py-2.5 text-sm font-semibold transition-colors relative ${
                 activeTab === tab
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white text-gray-500 hover:bg-gray-50'
+                  ? 'bg-brand-600 text-white'
+                  : 'bg-white text-slate-600 hover:bg-slate-100'
               }`}
             >
               {TAB_LABEL[tab]}
@@ -186,11 +186,11 @@ export default function ExchangesPage() {
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 rounded-xl bg-gray-100 animate-pulse" />
+              <div key={i} className="h-32 rounded-xl bg-slate-200 animate-pulse" />
             ))}
           </div>
         ) : displayed.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">
+          <div className="text-center py-12 text-slate-500 text-sm">
             {activeTab === Tab.Received
               ? 'Personne ne t\'a encore contacté.'
               : 'Tu n\'as pas encore envoyé de demande.'}
@@ -212,7 +212,7 @@ export default function ExchangesPage() {
                 && !appreciationDone.has(exchange.id)
 
               return (
-                <div key={exchange.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                <div key={exchange.id} className="bg-white rounded-xl border border-slate-300 p-4">
                   {/* Top */}
                   <div className="flex items-start gap-3 mb-3">
                     <div
@@ -222,40 +222,40 @@ export default function ExchangesPage() {
                       {cat?.emoji ?? '🔧'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-semibold text-slate-900 truncate">
                         {skillLabel(exchange.skill)}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-slate-600 mt-0.5">
                         {isRequester ? 'À' : 'De'}{' '}
-                        <span className="font-medium text-gray-700">{other.first_name}</span>
+                        <span className="font-semibold text-slate-700">{other.first_name}</span>
                         {' · '}{other.city}
                         {exchange.duration_minutes && (
-                          <span className="ml-1 text-gray-400">· ⏱ {formatDuration(exchange.duration_minutes)}</span>
+                          <span className="ml-1 text-slate-500">· ⏱ {formatDuration(exchange.duration_minutes)}</span>
                         )}
                       </p>
                     </div>
-                    <span className={`text-xs rounded-full px-2.5 py-1 font-medium flex-shrink-0 ${STATUS_COLOR[exchange.status]}`}>
+                    <span className={`text-xs rounded-full px-2.5 py-1 font-semibold flex-shrink-0 ${STATUS_COLOR[exchange.status]}`}>
                       {STATUS_LABEL[exchange.status]}
                     </span>
                   </div>
 
                   {/* Message */}
                   {exchange.message && (
-                    <p className="text-xs text-gray-500 italic bg-gray-50 rounded-lg px-3 py-2 mb-3">
+                    <p className="text-xs text-slate-600 italic bg-slate-100 rounded-lg px-3 py-2 mb-3">
                       "{exchange.message}"
                     </p>
                   )}
 
                   {/* Crédits transférés */}
                   {exchange.status === ExchangeStatus.Completed && exchange.credits_transferred && (
-                    <p className="text-xs text-emerald-600 font-medium mb-3">
+                    <p className="text-xs text-emerald-600 font-semibold mb-3">
                       ✓ 1 service transféré
                     </p>
                   )}
 
                   {/* Appréciation envoyée cette session */}
                   {appreciationDone.has(exchange.id) && (
-                    <p className="text-xs text-emerald-600 font-medium pt-2 border-t border-gray-100">
+                    <p className="text-xs text-emerald-600 font-semibold pt-2 border-t border-slate-300">
                       ✓ Appréciation envoyée à {other.first_name}
                     </p>
                   )}
@@ -268,14 +268,14 @@ export default function ExchangesPage() {
                       <button
                         onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
                         disabled={isUpdating}
-                        className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                        className="flex-1 py-2 rounded-lg border border-slate-300 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                       >
                         Décliner
                       </button>
                       <button
                         onClick={() => handleStatus(exchange.id, ExchangeStatus.Confirmed)}
                         disabled={isUpdating}
-                        className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
+                        className="flex-1 py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 disabled:opacity-40"
                       >
                         {isUpdating ? '...' : 'Accepter'}
                       </button>
@@ -287,7 +287,7 @@ export default function ExchangesPage() {
                     <button
                       onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
                       disabled={isUpdating}
-                      className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                      className="w-full py-2 rounded-lg border border-slate-300 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                     >
                       Annuler la demande
                     </button>
@@ -298,7 +298,7 @@ export default function ExchangesPage() {
                     <button
                       onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
                       disabled={isUpdating}
-                      className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                      className="w-full py-2 rounded-lg border border-slate-300 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                     >
                       Annuler
                     </button>
@@ -310,13 +310,13 @@ export default function ExchangesPage() {
                       <button
                         onClick={() => handleStatus(exchange.id, ExchangeStatus.Cancelled)}
                         disabled={isUpdating}
-                        className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+                        className="flex-1 py-2 rounded-lg border border-slate-300 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                       >
                         Annuler
                       </button>
                       <button
                         onClick={() => setCompletionOpen(prev => new Set([...prev, exchange.id]))}
-                        className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700"
+                        className="flex-1 py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700"
                       >
                         Marquer réalisé
                       </button>
@@ -324,9 +324,9 @@ export default function ExchangesPage() {
                   )}
 
                   {exchange.status === ExchangeStatus.Confirmed && isRequester && isCompletionOpen && (
-                    <div className="border-t border-gray-100 pt-3 space-y-3">
-                      <p className="text-xs font-medium text-gray-700">
-                        Comment était {other.first_name} ? <span className="text-gray-400 font-normal">(facultatif)</span>
+                    <div className="border-t border-slate-300 pt-3 space-y-3">
+                      <p className="text-xs font-semibold text-slate-700">
+                        Comment était {other.first_name} ? <span className="text-slate-500 font-normal">(facultatif)</span>
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {ADJECTIVES.map(adj => {
@@ -337,8 +337,8 @@ export default function ExchangesPage() {
                               onClick={() => toggleAdjective(exchange.id, adj.id)}
                               className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
                                 active
-                                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                                  ? 'bg-brand-500 border-brand-500 text-white'
+                                  : 'bg-white border-slate-300 text-slate-600 hover:border-slate-400'
                               }`}
                             >
                               {adj.label}
@@ -349,14 +349,14 @@ export default function ExchangesPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => setCompletionOpen(prev => { const s = new Set(prev); s.delete(exchange.id); return s })}
-                          className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50"
+                          className="flex-1 py-2 rounded-lg border border-slate-300 text-xs text-slate-600 hover:bg-slate-100"
                         >
                           Retour
                         </button>
                         <button
                           onClick={() => handleCompleteWithAppreciation(exchange)}
                           disabled={isUpdating}
-                          className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
+                          className="flex-1 py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 disabled:opacity-40"
                         >
                           {isUpdating ? '...' : 'Confirmer la réalisation'}
                         </button>
@@ -368,15 +368,15 @@ export default function ExchangesPage() {
                   {canAppreciateRetro && !isAppreciationOpen && !appreciationDone.has(exchange.id) && (
                     <button
                       onClick={() => setAppreciationOpen(prev => new Set([...prev, exchange.id]))}
-                      className="w-full py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+                      className="w-full py-2 rounded-lg border border-slate-300 text-xs text-slate-600 hover:bg-slate-100 transition-colors"
                     >
                       Laisser une appréciation à {other.first_name}
                     </button>
                   )}
 
                   {canAppreciateRetro && isAppreciationOpen && (
-                    <div className="border-t border-gray-100 pt-3 space-y-3">
-                      <p className="text-xs font-medium text-gray-600">
+                    <div className="border-t border-slate-300 pt-3 space-y-3">
+                      <p className="text-xs font-semibold text-slate-600">
                         Comment était {other.first_name} ?
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -388,8 +388,8 @@ export default function ExchangesPage() {
                               onClick={() => toggleAdjective(exchange.id, adj.id)}
                               className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
                                 active
-                                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                                  ? 'bg-brand-500 border-brand-500 text-white'
+                                  : 'bg-white border-slate-300 text-slate-600 hover:border-slate-400'
                               }`}
                             >
                               {adj.label}
@@ -400,14 +400,14 @@ export default function ExchangesPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => setAppreciationOpen(prev => { const s = new Set(prev); s.delete(exchange.id); return s })}
-                          className="flex-1 py-2 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50"
+                          className="flex-1 py-2 rounded-lg border border-slate-300 text-xs text-slate-600 hover:bg-slate-100"
                         >
                           Passer
                         </button>
                         <button
                           onClick={() => handleAppreciation(exchange)}
                           disabled={adjectives.length === 0 || isUpdating}
-                          className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-40"
+                          className="flex-1 py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 disabled:opacity-40"
                         >
                           {isUpdating ? '...' : 'Envoyer'}
                         </button>

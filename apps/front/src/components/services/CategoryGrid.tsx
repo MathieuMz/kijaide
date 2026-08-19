@@ -19,8 +19,8 @@ export default function CategoryGrid({ categories, activeCategory, onSelect }: P
             onClick={() => onSelect(isActive ? null : cat.id)}
             className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full border text-sm transition-all ${
               isActive
-                ? 'border-emerald-500 font-medium text-emerald-800'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                ? 'border-brand-500 font-semibold text-brand-800'
+                : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
             }`}
             style={{ backgroundColor: isActive ? cat.bg : undefined }}
           >

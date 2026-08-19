@@ -36,12 +36,12 @@ export default function ServiceCard({ service: skill, userLat, userLng, highligh
       href={`/skills/${skill.id}`}
       className={`block bg-white rounded-xl border p-4 transition-colors ${
         highlighted
-          ? 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-500'
-          : 'border-gray-200 hover:border-emerald-400'
+          ? 'border-brand-300 bg-brand-100/50 hover:border-brand-500'
+          : 'border-slate-300 hover:border-brand-400'
       }`}
     >
       {highlighted && (
-        <p className="text-xs text-emerald-600 font-medium mb-2">✦ Correspond à tes intérêts</p>
+        <p className="text-xs text-brand-600 font-semibold mb-2">✦ Correspond à tes intérêts</p>
       )}
       {/* Compétence */}
       <div className="flex gap-2.5 mb-3">
@@ -52,9 +52,9 @@ export default function ServiceCard({ service: skill, userLat, userLng, highligh
           {cat?.emoji ?? '🔧'}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-800">{subcatLabel}</p>
+          <p className="text-sm font-semibold text-slate-800">{subcatLabel}</p>
           {displayComment && (
-            <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
               {displayComment}
             </p>
           )}
@@ -62,7 +62,7 @@ export default function ServiceCard({ service: skill, userLat, userLng, highligh
       </div>
 
       {/* Résident */}
-      <div className="pt-3 border-t border-gray-100">
+      <div className="pt-3 border-t border-slate-300">
         {resident && <ResidentCard resident={resident} locationLabel={locationLabel} />}
       </div>
     </Link>

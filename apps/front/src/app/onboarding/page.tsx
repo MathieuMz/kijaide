@@ -74,16 +74,16 @@ function AddressSearch({
         onChange={e => handleChange(e.target.value)}
         placeholder="Ex : 12 rue de la Paix, Landivisiau"
         className={`w-full border rounded-lg px-3 py-3 text-sm focus:outline-none transition-colors ${
-          confirmed ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 focus:border-emerald-400'
+          confirmed ? 'border-brand-400 bg-brand-100' : 'border-slate-300 focus:border-brand-400'
         }`}
       />
       {suggestions.length > 0 && !confirmed && (
-        <ul className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg mt-1 shadow-lg z-20 overflow-hidden">
+        <ul className="absolute top-full left-0 right-0 bg-white border border-slate-300 rounded-lg mt-1 shadow-lg z-20 overflow-hidden">
           {suggestions.map((f, i) => (
             <li key={i}>
               <button
                 onClick={() => handleSelect(f)}
-                className="w-full px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 last:border-0"
+                className="w-full px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 border-b border-slate-300 last:border-0"
               >
                 {f.properties.label}
               </button>
@@ -113,15 +113,15 @@ function IdentityStep({
   return (
     <div className="flex flex-col px-4 py-8 gap-6 max-w-sm mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Bienvenue sur Kijaide</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-slate-800">Bienvenue sur Kijaide</h1>
+        <p className="text-sm text-slate-600 mt-1">
           Quelques infos pour te présenter à tes voisins.
         </p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1.5">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
             Prénom
           </label>
           <input
@@ -129,22 +129,22 @@ function IdentityStep({
             value={firstName}
             onChange={e => setFirstName(e.target.value)}
             placeholder="Ex : Marie"
-            className="w-full border border-gray-200 rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-emerald-400"
+            className="w-full border border-slate-300 rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-brand-400"
           />
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1.5">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
             Adresse
           </label>
           <AddressSearch onSelect={onAddressSelect} />
           {city && (
-            <p className="text-xs text-emerald-600 mt-1.5">📍 {city}</p>
+            <p className="text-xs text-brand-600 mt-1.5">📍 {city}</p>
           )}
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1.5">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
             Email
           </label>
           <input
@@ -152,16 +152,16 @@ function IdentityStep({
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="Ex : marie@exemple.fr"
-            className="w-full border border-gray-200 rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-emerald-400"
+            className="w-full border border-slate-300 rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-brand-400"
           />
-          <p className="text-xs text-gray-400 mt-1.5">Pour recevoir les mises en relation et les nouveautés.</p>
+          <p className="text-xs text-slate-500 mt-1.5">Pour recevoir les mises en relation et les nouveautés.</p>
         </div>
       </div>
 
       <button
         onClick={onNext}
         disabled={!canContinue}
-        className="py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm disabled:opacity-40 hover:bg-emerald-600 transition-all"
+        className="py-3 rounded-xl bg-brand-500 text-white font-bold text-sm disabled:opacity-40 hover:bg-brand-600 transition-all"
       >
         Continuer →
       </button>
@@ -191,24 +191,24 @@ function SwipeCard({
       <div className="flex gap-1.5">
         {Array.from({ length: total }).map((_, i) => (
           <div key={i} className={`h-1.5 w-6 rounded-full transition-all ${
-            i < index ? 'bg-emerald-500' : i === index ? 'bg-emerald-300' : 'bg-gray-200'
+            i < index ? 'bg-brand-500' : i === index ? 'bg-brand-300' : 'bg-slate-200'
           }`} />
         ))}
       </div>
 
       <div className={`w-full max-w-sm transition-all duration-300 ease-in-out ${transform}`}>
         <div
-          className="rounded-2xl border border-gray-100 shadow-lg p-10 flex flex-col items-center gap-6 text-center"
+          className="rounded-2xl border border-slate-300 shadow-lg p-10 flex flex-col items-center gap-6 text-center"
           style={{ backgroundColor: category.bg }}
         >
           <span className="text-8xl">{category.emoji}</span>
-          <p className="text-xl font-semibold text-gray-800 leading-snug">{question}</p>
+          <p className="text-xl font-bold text-slate-800 leading-snug">{question}</p>
         </div>
       </div>
 
       <div className="flex gap-8">
-        <button onClick={onNo} className="w-16 h-16 rounded-full border-2 border-gray-300 bg-white text-2xl flex items-center justify-center shadow hover:border-red-300 hover:text-red-400 transition-all">✗</button>
-        <button onClick={onYes} className="w-16 h-16 rounded-full border-2 border-emerald-400 bg-emerald-50 text-2xl flex items-center justify-center shadow hover:bg-emerald-100 transition-all">✓</button>
+        <button onClick={onNo} className="w-16 h-16 rounded-full border-2 border-slate-400 bg-white text-2xl flex items-center justify-center shadow hover:border-red-300 hover:text-red-400 transition-all">✗</button>
+        <button onClick={onYes} className="w-16 h-16 rounded-full border-2 border-brand-400 bg-brand-100 text-2xl flex items-center justify-center shadow hover:bg-brand-200 transition-all">✓</button>
       </div>
     </div>
   )
@@ -236,8 +236,8 @@ function SubcatsScreen({
       <div className="flex items-center gap-3">
         <span className="text-4xl">{category.emoji}</span>
         <div>
-          <h2 className="text-lg font-bold text-gray-800">{category.label}</h2>
-          <p className="text-sm text-gray-500">Qu&apos;est-ce que tu peux faire ?</p>
+          <h2 className="text-lg font-bold text-slate-800">{category.label}</h2>
+          <p className="text-sm text-slate-600">Qu&apos;est-ce que tu peux faire ?</p>
         </div>
       </div>
 
@@ -248,10 +248,10 @@ function SubcatsScreen({
             <button
               key={sub.id}
               onClick={() => onToggle(sub.id as SubcatId)}
-              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-full border text-sm font-semibold transition-all ${
                 active
-                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                  ? 'bg-brand-500 border-brand-500 text-white'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-400'
               }`}
             >
               {sub.label}
@@ -261,13 +261,13 @@ function SubcatsScreen({
       </div>
 
       {/* Autre — section séparée */}
-      <div className="border-t border-gray-100 pt-4 space-y-3">
+      <div className="border-t border-slate-300 pt-4 space-y-3">
         <button
           onClick={() => onToggle(AUTRE_SUBCAT_ID)}
-          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+          className={`px-4 py-2 rounded-full border text-sm font-semibold transition-all ${
             autreSelected
-              ? 'bg-emerald-500 border-emerald-500 text-white'
-              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+              ? 'bg-brand-500 border-brand-500 text-white'
+              : 'bg-white border-slate-300 text-slate-700 hover:border-slate-400'
           }`}
         >
           Autre
@@ -279,7 +279,7 @@ function SubcatsScreen({
               value={autreComment}
               onChange={e => onAutreComment(e.target.value)}
               placeholder="Ce que tu proposes (ex : Fabrication de savons) *"
-              className="w-full border border-emerald-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400 bg-emerald-50"
+              className="w-full border border-brand-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-400 bg-brand-100"
               autoFocus
             />
             <input
@@ -287,7 +287,7 @@ function SubcatsScreen({
               value={autreDescription}
               onChange={e => onAutreDescription(e.target.value)}
               placeholder="Description supplémentaire (facultatif)"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-400"
             />
           </div>
         )}
@@ -296,7 +296,7 @@ function SubcatsScreen({
       <button
         onClick={onDone}
         disabled={selected.length === 0 || (autreSelected && autreComment.trim().length === 0)}
-        className="mt-2 py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm disabled:opacity-40 hover:bg-emerald-600 transition-all"
+        className="mt-2 py-3 rounded-xl bg-brand-500 text-white font-bold text-sm disabled:opacity-40 hover:bg-brand-600 transition-all"
       >
         Continuer →
       </button>
@@ -330,8 +330,8 @@ function DetailsStep({
   return (
     <div className="flex flex-col px-4 py-8 gap-6 max-w-sm mx-auto">
       <div>
-        <h2 className="text-xl font-bold text-gray-800">Un peu de détail</h2>
-        <p className="text-sm text-gray-500 mt-1">Facultatif, mais ça aide beaucoup.</p>
+        <h2 className="text-xl font-bold text-slate-800">Un peu de détail</h2>
+        <p className="text-sm text-slate-600 mt-1">Facultatif, mais ça aide beaucoup.</p>
       </div>
 
       {categories.map(cat => {
@@ -345,7 +345,7 @@ function DetailsStep({
 
         return (
           <div key={cat.id}>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
               {cat.emoji} {cat.label}
             </p>
             <div className="space-y-2">
@@ -356,7 +356,7 @@ function DetailsStep({
                     value={comments[`${cat.id}:${sub.id}`] ?? ''}
                     onChange={e => setComment(`${cat.id}:${sub.id}`, e.target.value)}
                     placeholder={`Détails pour ${sub.label} (facultatif)`}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-400"
                   />
                 </div>
               ))}
@@ -366,7 +366,7 @@ function DetailsStep({
       })}
 
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
           📅 Disponibilités
         </p>
         <div className="flex flex-wrap gap-2 mb-3">
@@ -384,8 +384,8 @@ function DetailsStep({
                 }}
                 className={`px-3 py-1.5 rounded-full border text-xs transition-colors ${
                   active
-                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'bg-brand-500 border-brand-500 text-white'
+                    : 'border-slate-300 text-slate-600 hover:border-slate-400'
                 }`}
               >
                 {chip}
@@ -398,13 +398,13 @@ function DetailsStep({
           value={availability}
           onChange={e => setAvailability(e.target.value)}
           placeholder="Ex : Le samedi matin"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
+          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-400"
         />
       </div>
 
       <button
         onClick={onNext}
-        className="py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-all"
+        className="py-3 rounded-xl bg-brand-500 text-white font-bold text-sm hover:bg-brand-600 transition-all"
       >
         Continuer →
       </button>
@@ -426,8 +426,8 @@ function InterestsStep({
   return (
     <div className="flex flex-col px-4 py-8 gap-6 max-w-sm mx-auto">
       <div>
-        <h2 className="text-xl font-bold text-gray-800">Qu&apos;est-ce que tu aimerais apprendre ?</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 className="text-xl font-bold text-slate-800">Qu&apos;est-ce que tu aimerais apprendre ?</h2>
+        <p className="text-sm text-slate-600 mt-1">
           On te préviendra quand un voisin propose quelque chose qui t&apos;intéresse.
         </p>
       </div>
@@ -439,10 +439,10 @@ function InterestsStep({
             <button
               key={cat.id}
               onClick={() => onToggleCat(cat.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-all ${
                 active
-                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                  ? 'bg-brand-500 border-brand-500 text-white'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-400'
               }`}
             >
               <span>{cat.emoji}</span>
@@ -454,7 +454,7 @@ function InterestsStep({
 
       {selectedCats.length > 0 && (
         <div className="space-y-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
             Affine tes intérêts (facultatif)
           </p>
           {selectedCats.map(catId => {
@@ -464,7 +464,7 @@ function InterestsStep({
             const activeSubs = selectedSubcats[catId] ?? []
             return (
               <div key={catId}>
-                <p className="text-xs font-medium text-gray-500 mb-2">{cat.emoji} {cat.label}</p>
+                <p className="text-xs font-semibold text-slate-600 mb-2">{cat.emoji} {cat.label}</p>
                 <div className="flex flex-wrap gap-2">
                   {subcats.map(sub => {
                     const active = activeSubs.includes(sub.id)
@@ -474,8 +474,8 @@ function InterestsStep({
                         onClick={() => onToggleSubcat(catId, sub.id)}
                         className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
                           active
-                            ? 'bg-emerald-500 border-emerald-500 text-white'
-                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                            ? 'bg-brand-500 border-brand-500 text-white'
+                            : 'bg-white border-slate-300 text-slate-600 hover:border-slate-400'
                         }`}
                       >
                         {sub.label}
@@ -491,7 +491,7 @@ function InterestsStep({
 
       <button
         onClick={onNext}
-        className="py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-all"
+        className="py-3 rounded-xl bg-brand-500 text-white font-bold text-sm hover:bg-brand-600 transition-all"
       >
         {selectedCats.length === 0 ? 'Passer →' : 'Continuer →'}
       </button>
@@ -521,29 +521,29 @@ function RecapScreen({
   return (
     <div className="flex flex-col px-4 py-8 gap-5 max-w-sm mx-auto">
       <div>
-        <h2 className="text-xl font-bold text-gray-800">Ton profil</h2>
-        <p className="text-sm text-gray-500 mt-1">Voilà ce que verront tes voisins.</p>
+        <h2 className="text-xl font-bold text-slate-800">Ton profil</h2>
+        <p className="text-sm text-slate-600 mt-1">Voilà ce que verront tes voisins.</p>
       </div>
 
-      <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700">
+      <div className="bg-slate-100 rounded-xl p-4 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-sm font-bold text-brand-700">
           {firstName[0]?.toUpperCase()}
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-800">{firstName}</p>
-          <p className="text-xs text-gray-500">📍 {city}{availability && ` · 📅 ${availability}`}</p>
+          <p className="text-sm font-semibold text-slate-800">{firstName}</p>
+          <p className="text-xs text-slate-600">📍 {city}{availability && ` · 📅 ${availability}`}</p>
         </div>
       </div>
 
       {categories.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-4">Aucune compétence sélectionnée.</p>
+        <p className="text-sm text-slate-500 text-center py-4">Aucune compétence sélectionnée.</p>
       ) : (
         <div className="space-y-3">
           {categories.map(cat => (
-            <div key={cat.id} className="rounded-xl p-4 border border-gray-100" style={{ backgroundColor: cat.bg }}>
+            <div key={cat.id} className="rounded-xl p-4 border border-slate-300" style={{ backgroundColor: cat.bg }}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">{cat.emoji}</span>
-                <span className="text-sm font-medium text-gray-800">{cat.label}</span>
+                <span className="text-sm font-semibold text-slate-800">{cat.label}</span>
               </div>
               <div className="space-y-1">
                 {(selectedSubcats[cat.id] ?? []).map(subcatId => {
@@ -553,8 +553,8 @@ function RecapScreen({
                   const comment = subcatId !== AUTRE_SUBCAT_ID ? comments[`${cat.id}:${subcatId}`] : undefined
                   return (
                     <div key={subcatId}>
-                      <span className="text-xs bg-white/80 border border-white rounded-full px-2.5 py-0.5 text-gray-700">{label}</span>
-                      {comment && <p className="text-xs text-gray-500 mt-0.5 ml-1 italic">{comment}</p>}
+                      <span className="text-xs bg-white/80 border border-white rounded-full px-2.5 py-0.5 text-slate-700">{label}</span>
+                      {comment && <p className="text-xs text-slate-600 mt-0.5 ml-1 italic">{comment}</p>}
                     </div>
                   )
                 })}
@@ -569,9 +569,9 @@ function RecapScreen({
           type="checkbox"
           checked={emailDigest}
           onChange={e => setEmailDigest(e.target.checked)}
-          className="mt-0.5 w-4 h-4 accent-emerald-500 cursor-pointer"
+          className="mt-0.5 w-4 h-4 accent-brand-500 cursor-pointer"
         />
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-slate-600">
           Recevoir les nouveautés de mes voisins par mail chaque semaine
         </span>
       </label>
@@ -579,7 +579,7 @@ function RecapScreen({
       <button
         onClick={onSave}
         disabled={saving}
-        className="py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm disabled:opacity-40 hover:bg-emerald-600 transition-all"
+        className="py-3 rounded-xl bg-brand-500 text-white font-bold text-sm disabled:opacity-40 hover:bg-brand-600 transition-all"
       >
         {saving ? 'Enregistrement...' : "C'est parti !"}
       </button>

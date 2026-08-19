@@ -97,13 +97,13 @@ export default function CompetencesTab({ user }: { user: Resident }) {
     }
   }
 
-  if (isLoading) return <p className="text-sm text-gray-400">Chargement...</p>
+  if (isLoading) return <p className="text-sm text-slate-500">Chargement...</p>
 
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-2">Sélectionne ce que tu peux proposer.</p>
+      <p className="text-xs text-slate-500 mb-2">Sélectionne ce que tu peux proposer.</p>
 
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-slate-200">
         {CATEGORIES.map(cat => {
           const catSelected = selected[cat.id] ?? []
           const autreSelected = catSelected.includes(AUTRE_SUBCAT_ID)
@@ -111,7 +111,7 @@ export default function CompetencesTab({ user }: { user: Resident }) {
 
           return (
             <div key={cat.id} className="py-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                 {cat.emoji} {cat.label}
               </p>
 
@@ -125,8 +125,8 @@ export default function CompetencesTab({ user }: { user: Resident }) {
                       onClick={() => toggle(cat.id, sub.id as SubcatId)}
                       className={`px-3 py-1.5 rounded-full border text-sm transition-colors ${
                         active
-                          ? 'bg-emerald-500 border-emerald-500 text-white'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          ? 'bg-brand-500 border-brand-500 text-white'
+                          : 'border-slate-300 text-slate-600 hover:border-slate-400'
                       }`}
                     >
                       {sub.label}
@@ -140,25 +140,25 @@ export default function CompetencesTab({ user }: { user: Resident }) {
                 .filter(sub => catSelected.includes(sub.id as SubcatId))
                 .map(sub => (
                   <div key={sub.id} className="mb-2">
-                    <label className="text-xs text-gray-400 block mb-1">{sub.label}</label>
+                    <label className="text-xs text-slate-500 block mb-1">{sub.label}</label>
                     <input
                       type="text"
                       value={comments[`${cat.id}:${sub.id}`] ?? ''}
                       onChange={e => setComment(`${cat.id}:${sub.id}`, e.target.value)}
                       placeholder="Ajouter un détail... (facultatif)"
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-emerald-400"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-brand-400"
                     />
                   </div>
                 ))}
 
               {/* Autre — séparé */}
-              <div className="border-t border-gray-100 pt-3 space-y-2">
+              <div className="border-t border-slate-300 pt-3 space-y-2">
                 <button
                   onClick={() => toggle(cat.id, AUTRE_SUBCAT_ID)}
                   className={`px-3 py-1.5 rounded-full border text-sm transition-colors ${
                     autreSelected
-                      ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      ? 'bg-brand-500 border-brand-500 text-white'
+                      : 'border-slate-300 text-slate-600 hover:border-slate-400'
                   }`}
                 >
                   Autre
@@ -170,14 +170,14 @@ export default function CompetencesTab({ user }: { user: Resident }) {
                       value={comments[`${cat.id}:${AUTRE_SUBCAT_ID}`] ?? ''}
                       onChange={e => setComment(`${cat.id}:${AUTRE_SUBCAT_ID}`, e.target.value)}
                       placeholder="Ce que tu proposes (ex : Fabrication de savons) *"
-                      className="w-full border border-emerald-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-emerald-400 bg-emerald-50"
+                      className="w-full border border-brand-300 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-brand-400 bg-brand-100"
                     />
                     <input
                       type="text"
                       value={comments[`${cat.id}:${AUTRE_SUBCAT_ID}:desc`] ?? ''}
                       onChange={e => setComment(`${cat.id}:${AUTRE_SUBCAT_ID}:desc`, e.target.value)}
                       placeholder="Description supplémentaire (facultatif)"
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-emerald-400"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-brand-400"
                     />
                   </div>
                 )}
@@ -190,7 +190,7 @@ export default function CompetencesTab({ user }: { user: Resident }) {
       <button
         onClick={handleSave}
         disabled={isSaving || !isDirty}
-        className="w-full mt-4 py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm disabled:opacity-40 hover:bg-emerald-600 transition-all"
+        className="w-full mt-4 py-3 rounded-xl bg-brand-500 text-white font-bold text-sm disabled:opacity-40 hover:bg-brand-600 transition-all"
       >
         {isSaving ? 'Enregistrement...' : saved && !isDirty ? '✓ Enregistré' : 'Enregistrer'}
       </button>
