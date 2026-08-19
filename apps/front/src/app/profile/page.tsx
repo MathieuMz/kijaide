@@ -28,11 +28,11 @@ function ProfilePage({ user, setUser }: { user: Resident; setUser: (u: Resident 
 
   return (
     <main className="min-h-screen bg-slate-100">
-      <header className="bg-white border-b border-slate-300 px-4 py-4 flex items-center gap-3">
-        <button onClick={() => router.push('/')} className="text-slate-500 hover:text-slate-600 text-sm">
+      <header className="bg-brand-950 border-b border-brand-800 px-4 py-4 flex items-center gap-3">
+        <button onClick={() => router.push('/')} className="text-sm font-medium text-brand-300 hover:text-white">
           ← Retour
         </button>
-        <h1 className="text-base font-semibold text-slate-900">Mon profil</h1>
+        <h1 className="text-base font-bold text-white">Mon profil</h1>
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6">

@@ -58,7 +58,7 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
             className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm border transition-colors ${
               !activeSubcategory
                 ? 'bg-brand-600 border-brand-600 text-white'
-                : 'border-slate-300 text-slate-600 hover:border-slate-500'
+                : 'border-brand-800 bg-brand-950 text-brand-300 font-medium hover:border-brand-500 hover:text-brand-100'
             }`}
           >
             Tous
@@ -70,7 +70,7 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
               className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm border transition-colors ${
                 activeSubcategory === sub.id
                   ? 'bg-brand-600 border-brand-600 text-white'
-                  : 'border-slate-300 text-slate-600 hover:border-slate-500'
+                  : 'border-brand-800 bg-brand-950 text-brand-300 font-medium hover:border-brand-500 hover:text-brand-100'
               }`}
             >
               {sub.label}
@@ -95,7 +95,7 @@ export default function ServiceExplorer({ initialSkills, categories, userLat, us
           className={`md:hidden flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
             showFiltersMobile
               ? 'bg-brand-500 border-brand-500 text-white'
-              : 'border-slate-300 text-slate-600 hover:border-slate-400'
+              : 'border-brand-800 bg-brand-950 text-brand-300 font-semibold hover:border-brand-500 hover:text-brand-100'
           }`}
         >
           <span>Filtrer</span>
